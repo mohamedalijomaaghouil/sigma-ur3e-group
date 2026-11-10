@@ -115,6 +115,12 @@ B2 feeds B5b directly: visual servoing sends its commands through the velocity c
 
 Each member leads one track and backs up another; hand-eye calibration is on the critical path, so it gets two people. Roles agreed on 10/11/2026.
 
+**Leadership (agreed on 10/11/2026):**
+
+- **Technical lead: Kamil BENMADI.** Robot cell, code architecture and ROS2 integration; final say on technical choices; reviews and merges pull requests.
+- **Coordinator: Mohamed Taher GUERBEJ.** Weekly sync, timeline and task board, communication with the professors, assembly of the step reports.
+- Technical questions go to Kamil, organisation and deadlines to Mohamed Taher.
+
 | Role | Member | Leads | Backs up | First deliverable |
 | --- | --- | --- | --- | --- |
 | R1 Robot and ROS2 | Kamil BENMADI | B0 infra, B2 velocity controllers, then B5b visual servoing | B3 data collection | Robot moving in Gazebo and on the real UR3e via a Cartesian velocity command |

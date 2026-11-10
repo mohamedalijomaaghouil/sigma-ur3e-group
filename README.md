@@ -36,8 +36,8 @@ See [docs/SETUP.md](docs/SETUP.md). Working rules: [CONTRIBUTING.md](CONTRIBUTIN
 
 | Name | GitHub | Role |
 | --- | --- | --- |
-| Kamil BENMADI | | R1 Robot and ROS2 |
+| Kamil BENMADI | | R1 Robot and ROS2, technical lead |
 | Mohamed Ali JOMAA GHOUIL | | R2 Calibration |
 | Kevin PALAIO CORREIA | | R3 Classic vision |
-| Mohamed Taher GUERBEJ | | R4 Deep learning |
+| Mohamed Taher GUERBEJ | | R4 Deep learning, coordinator |
 | Dina MOUTIH | | R5 SfM and integration |
