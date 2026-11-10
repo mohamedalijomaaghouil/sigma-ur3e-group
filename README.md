@@ -36,8 +36,8 @@ See [docs/SETUP.md](docs/SETUP.md). Working rules: [CONTRIBUTING.md](CONTRIBUTIN
 
 | Name | GitHub | Role |
 | --- | --- | --- |
-| | | R1 Robot and ROS2 |
-| | | R2 Calibration |
-| | | R3 Classic vision |
-| | | R4 Deep learning |
-| | | R5 SfM and integration |
+| Kamil BENMADI | | R1 Robot and ROS2 |
+| Mohamed Ali JOMAA GHOUIL | | R2 Calibration |
+| Kevin PALAIO CORREIA | | R3 Classic vision |
+| Mohamed Taher GUERBEJ | | R4 Deep learning |
+| Dina MOUTIH | | R5 SfM and integration |

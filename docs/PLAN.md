@@ -113,15 +113,15 @@ B2 feeds B5b directly: visual servoing sends its commands through the velocity c
 
 ## Who does what
 
-Each member leads one track and backs up another; hand-eye calibration is on the critical path, so it gets two people. Put your name in the Member column.
+Each member leads one track and backs up another; hand-eye calibration is on the critical path, so it gets two people. Roles agreed on 10/11/2026.
 
 | Role | Member | Leads | Backs up | First deliverable |
 | --- | --- | --- | --- | --- |
-| R1 Robot and ROS2 | | B0 infra, B2 velocity controllers, then B5b visual servoing | B3 data collection | Robot moving in Gazebo and on the real UR3e via a Cartesian velocity command |
-| R2 Calibration | | B1 camera calibration, B3 hand-eye | B4b pose | K and distortion vs factory values; X with error metrics |
-| R3 Classic vision | | ArUco pipeline, OpenCV detection and PnP pose, then B5a MoveIt pick | B3 | Live ArUco pose published on a ROS2 topic |
-| R4 Deep learning | | Dataset, DL detector (e.g. YOLO), DL pose | B4a OpenCV comparison | Labelled dataset of our object, first trained detector |
-| R5 SfM and integration | | Structure-from-motion pose, B6 scenario, LaTeX template and report merging | B5a | Report template in the repo, scenario proposal |
+| R1 Robot and ROS2 | Kamil BENMADI | B0 infra, B2 velocity controllers, then B5b visual servoing | B3 data collection | Robot moving in Gazebo and on the real UR3e via a Cartesian velocity command |
+| R2 Calibration | Mohamed Ali JOMAA GHOUIL | B1 camera calibration, B3 hand-eye | B4b pose | K and distortion vs factory values; X with error metrics |
+| R3 Classic vision | Kevin PALAIO CORREIA | ArUco pipeline, OpenCV detection and PnP pose, then B5a MoveIt pick | B3 | Live ArUco pose published on a ROS2 topic |
+| R4 Deep learning | Mohamed Taher GUERBEJ | Dataset, DL detector (e.g. YOLO), DL pose | B4a OpenCV comparison | Labelled dataset of our object, first trained detector |
+| R5 SfM and integration | Dina MOUTIH | Structure-from-motion pose, B6 scenario, LaTeX template and report merging | B5a | Report template in the repo, scenario proposal |
 
 ## Timeline
 
