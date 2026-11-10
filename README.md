@@ -11,7 +11,7 @@ estimates its pose and grasps it using visual servoing.
 | 4 | MoveIt open loop, IBVS / PBVS / hybrid visual servoing | `servoing/` |
 | 5 | Application scenario + demo | `ur3e_bringup/` (launch files) |
 
-Group plan (roles, timeline): see the shared doc.
+Group plan (roles, timeline, methods): [docs/PLAN.md](docs/PLAN.md).
 
 ## Layout
 
