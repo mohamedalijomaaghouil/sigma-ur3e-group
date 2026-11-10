@@ -4,7 +4,7 @@ Started 10/11/2026. Edit this file through a pull request like any other file.
 
 ## Project in one paragraph
 
-We build a vision-guided pick-and-place on a UR3e (ROS2) with an Intel RealSense used in RGB-only mode: detect an object, estimate its pose, then grasp it with visual servoing. The work follows 5 steps from Project-3A (Mezouar, Ozgur, Alkhatib); each step gets its own LaTeX report. The final review is a 15-minute presentation plus a 5-minute live demo on 27/01 (afternoon).
+We build a vision-guided pick-and-place on a UR3e (ROS2) with an Intel RealSense used in RGB-only mode: detect an object, estimate its pose, then grasp it with visual servoing. The work follows 5 steps from Project-3A (Mezouar, Ozgur, Alkhatib); each step gets its own LaTeX report. The final review is a 15-minute presentation plus a 5-minute live demo on 09/02/2027 (afternoon), per the updated Project-3A.pdf (version of 06/10/2026, sent by Alkhatib on 10/11).
 
 | Step | What the brief asks |
 | --- | --- |
@@ -16,7 +16,7 @@ We build a vision-guided pick-and-place on a UR3e (ROS2) with an Intel RealSense
 
 **Open questions for the professors**
 
-- [ ] The PDF says 27/01/2026, a date already past: is it 27/01/2027?
+- [x] Demo date: 09/02/2027 (afternoon), confirmed by the updated Project-3A.pdf
 - [ ] TP1 cites ROS1 packages (Universal_Robots_ROS_Driver, cambel/ur3) while the project is ROS2: which ROS2 distro (Humble or Jazzy) runs on the lab PCs?
 - [ ] Is the camera mounted on the wrist (eye-in-hand) or fixed in the cell (eye-to-hand)?
 - [ ] How many lab slots on the real robot per week, and can we book extra ones?
@@ -129,7 +129,7 @@ Hand-eye calibration validated by 6 December is the date that protects the rest 
 
 ```mermaid
 gantt
-    title Hand-eye done by Dec 6 leaves seven weeks for perception, control and the demo
+    title Hand-eye done by Dec 6 leaves nine weeks for perception, control and the demo
     dateFormat YYYY-MM-DD
     axisFormat %d %b
     section Setup
@@ -142,9 +142,9 @@ gantt
     B5b Servoing in simulation   :         vss,   2026-12-21, 2027-01-05
     B5b Servoing on the UR3e     :         vsr,   2027-01-05, 2027-01-19
     section Final
-    B6 Scenario, integration     :         sc,    2027-01-05, 2027-01-25
-    Final reports, rehearsal     :         rep,   2027-01-19, 2027-01-27
-    Demo day (date to confirm)   :milestone, crit, demo, 2027-01-27, 0d
+    B6 Scenario, integration     :         sc,    2027-01-05, 2027-02-02
+    Final reports, rehearsal     :         rep,   2027-01-26, 2027-02-09
+    Demo day                     :milestone, crit, demo, 2027-02-09, 0d
 ```
 
 Reports for steps 1 and 2 are written as soon as B3 is validated, not in January.
