@@ -1,0 +1,53 @@
+# ROS2 / colcon
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Heavy data: keep on the shared Drive, not in git
+data/*
+!data/README.md
+*.bag
+*.db3
+*.mcap
+*.pt
+*.pth
+*.onnx
+*.engine
+*.h5
+*.mp4
+*.avi
+*.mov
+runs/
+datasets/
+
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.lof
+*.lot
+*.nav
+*.snm
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
