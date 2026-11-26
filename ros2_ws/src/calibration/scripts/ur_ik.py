@@ -58,3 +58,56 @@ def fk(q):
         ct, st, ca, sa = np.cos(q[i]), np.sin(q[i]), np.cos(al[i]), np.sin(al[i])
         T = T @ np.array([[ct, -st*ca, st*sa, a[i]*ct], [st, ct*ca, -ct*sa, a[i]*st], [0, sa, ca, d[i]], [0, 0, 0, 1]])
     return T
+
+
+# ---------------------------------------------------------------------------------------------
+# Rough self-collision / table check with capsules (added 27/11 after the 26/11 collision:
+# the OnRobot gripper + camera folded back onto the shoulder). Sizes are deliberately LARGE.
+def _frames(q):
+    d = [d1, 0, 0, d4, d5, d6]; a = [0, a2, a3, 0, 0, 0]; al = [np.pi/2, 0, 0, np.pi/2, -np.pi/2, 0]
+    T = np.eye(4); out = [T.copy()]
+    for i in range(6):
+        ct, st, ca, sa = np.cos(q[i]), np.sin(q[i]), np.cos(al[i]), np.sin(al[i])
+        T = T @ np.array([[ct, -st*ca, st*sa, a[i]*ct], [st, ct*ca, -ct*sa, a[i]*st], [0, sa, ca, d[i]], [0, 0, 0, 1]])
+        out.append(T.copy())
+    return out
+
+
+def _seg_dist(p1, q1, p2, q2):
+    """Minimum distance between segments [p1,q1] and [p2,q2] (sampled, robust and simple)."""
+    t = np.linspace(0, 1, 15)
+    A = p1[None] + t[:, None] * (q1 - p1)[None]
+    B = p2[None] + t[:, None] * (q2 - p2)[None]
+    return float(np.min(np.linalg.norm(A[:, None] - B[None], axis=2)))
+
+
+TOOL_LENGTH = 0.22   # flange -> finger tips (OnRobot gripper + margin), along flange z
+# Thresholds calibrated on the 26/11 run (distances from the nominal DH model):
+#   safe poses kept the tool segment >= 0.196 m from the base axis, the collision pose went to 0.148 m;
+#   one pose brought the finger tips 4 cm above the table (camera cable pulled there).
+MIN_DIST_BASE = 0.20       # tool segment <-> base/shoulder vertical axis
+MIN_DIST_UPPER_ARM = 0.15  # tool segment <-> upper-arm segment
+MIN_TIP_ABOVE_TABLE = 0.08 # finger tips / flange above the table plane
+
+
+def collision(q, table_z=-0.03):
+    """True if the tool (gripper+camera) gets too close to the base/shoulder/upper arm or the table."""
+    F = _frames(q)
+    flange = F[6][:3, 3]
+    tip = flange + F[6][:3, 2] * TOOL_LENGTH
+    if _seg_dist(flange, tip, np.array([0, 0, 0.0]), np.array([0, 0, d1 + 0.08])) < MIN_DIST_BASE:
+        return "tool vs base/shoulder"
+    if _seg_dist(flange, tip, F[1][:3, 3], F[2][:3, 3]) < MIN_DIST_UPPER_ARM:
+        return "tool vs upper arm"
+    if min(tip[2], flange[2]) < table_z + MIN_TIP_ABOVE_TABLE:
+        return "tool vs table"
+    return None
+
+
+def path_collision(q_from, q_to, table_z=-0.03, steps=25):
+    """Check the straight joint-space path used by moveJ."""
+    for s in np.linspace(0, 1, steps):
+        c = collision(np.asarray(q_from) + s * (np.asarray(q_to) - np.asarray(q_from)), table_z)
+        if c:
+            return c
+    return None

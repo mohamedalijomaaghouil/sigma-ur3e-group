@@ -31,7 +31,7 @@ from rclpy.executors import SingleThreadedExecutor
 from scipy.spatial.transform import Rotation
 
 from handeye_collect import Camera, pose_to_mat
-from ur_ik import closest, fk, ik_all
+from ur_ik import closest, collision, fk, ik_all, path_collision
 
 
 def mat_to_pose(T):
@@ -93,6 +93,50 @@ def make_targets(T_tcp0, X, T_cb0, objp, min_height):
     return [T for T, h in safe if h >= min_height], dist0, P
 
 
+
+def plan_random(T_tcp0, X, T_cb0, objp, K, OFF, q0, table_z, n=400, keep=20, seed=0):
+    """Random poses around the board, kept only if: board fully in view (rough X), IK within joint
+    limits, joint change <= 120 deg, and the joint path start->pose is collision-free (ur_ik.collision).
+    Then greedily choose the `keep` most different orientations."""
+    rng = np.random.default_rng(seed)
+    T_c0 = T_tcp0 @ X
+    T_b = T_c0 @ T_cb0                                   # board in base
+    P = (T_b @ np.append(objp.mean(axis=0), 1.0))[:3]
+    pts = np.c_[objp, np.ones(len(objp))].T
+    cands = []
+    for _ in range(n):
+        tilt = np.radians(rng.uniform(10, 35))
+        daz = rng.uniform(0, 2 * np.pi)
+        R = Rotation.from_rotvec(tilt * np.array([np.cos(daz), np.sin(daz), 0.0])).as_matrix()
+        T_c = rot_about_point(P, R) @ T_c0 @ pose_to_mat([0, 0, 0, 0, 0, np.radians(rng.uniform(-60, 60))]) \
+            @ pose_to_mat([0, 0, -rng.uniform(-0.04, 0.04), 0, 0, 0])
+        pc = (np.linalg.inv(T_c) @ T_b @ pts)[:3]
+        if (pc[2] < 0.1).any():
+            continue
+        uv = (K @ pc)[:2] / pc[2]
+        if uv[0].min() < 40 or uv[0].max() > 1240 or uv[1].min() < 40 or uv[1].max() > 680:
+            continue
+        T = T_c @ np.linalg.inv(X)
+        q = closest(ik_all(T @ np.linalg.inv(OFF)), np.array(q0), limit=np.radians(350))
+        if q is None or np.degrees(np.max(np.abs(q - np.array(q0)))) > 120:
+            continue
+        if path_collision(q0, q, table_z):
+            continue
+        cands.append((T, q))
+    # greedy farthest-point selection on camera orientation
+    chosen = []
+    R0 = Rotation.from_matrix(T_c0[:3, :3])
+    dist = [np.degrees((R0.inv() * Rotation.from_matrix((T @ X)[:3, :3])).magnitude()) for T, _ in cands]
+    while cands and len(chosen) < keep:
+        k = int(np.argmax(dist))
+        chosen.append(cands[k])
+        Rk = Rotation.from_matrix((cands[k][0] @ X)[:3, :3])
+        new = [np.degrees((Rk.inv() * Rotation.from_matrix((T @ X)[:3, :3])).magnitude()) for T, _ in cands]
+        dist = [min(a, b) for a, b in zip(dist, new)]
+        dist[k] = -1
+    return chosen, len(cands), P
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--robot-ip", default="192.168.1.102")
@@ -136,25 +180,16 @@ def main():
         T_cb0, _ = det
         start_q = rr.getActualQ()
         T_tcp0 = pose_to_mat(rr.getActualTCPPose())
-        targets, dist0, P = make_targets(T_tcp0, X, T_cb0, objp, args.min_height)
-        print(f"Board centre in base: {np.round(P*1000)} mm, camera distance {dist0*1000:.0f} mm")
-        print(f"{len(targets)} candidate poses")
-
-        # Plan OFFLINE (analytic IK). Asking the robot for IK raises a protective error and kills
-        # the control script when a pose is unreachable (seen 26/11), so we never do that.
         OFF = np.linalg.inv(fk(start_q)) @ T_tcp0          # flange -> TCP, measured
-        ok_targets = []
-        for i, T in enumerate(targets):
-            sols = ik_all(T @ np.linalg.inv(OFF))
-            q = closest(sols, np.array(start_q), limit=np.radians(350))
-            if q is None:
-                print(f"  pose {i}: unreachable / beyond joint limits, skipped")
-                continue
-            jump = np.degrees(np.max(np.abs(q - np.array(start_q))))
-            if jump > 120:
-                print(f"  pose {i}: joint would turn {jump:.0f} deg, skipped")
-                continue
-            ok_targets.append((i, mat_to_pose(T), list(q)))
+        T_b = T_tcp0 @ X @ T_cb0
+        table_z = T_b[2, 3]                                 # board lies on the table
+        if collision(start_q, table_z):
+            raise SystemExit(f"Start pose itself too close to the robot/table ({collision(start_q, table_z)}). "
+                             "Move the board/start pose (see README).")
+        chosen, n_ok, P = plan_random(T_tcp0, X, T_cb0, objp, K, OFF, start_q, table_z)
+        print(f"Board centre in base: {np.round(P*1000)} mm, table z {table_z*1000:.0f} mm")
+        print(f"{n_ok}/400 random poses are safe; keeping the {len(chosen)} most different ones")
+        ok_targets = [(i, mat_to_pose(T), list(q)) for i, (T, q) in enumerate(chosen)]
         print(f"{len(ok_targets)} reachable poses")
         if args.dry_run:
             print("Dry run: robot did NOT move.")
@@ -172,6 +207,8 @@ def main():
             print(f"-> pose {i}")
             # moveJ returns False on protective stop / collision: STOP EVERYTHING (bug seen 26/11:
             # the old version kept sending poses after a collision)
+            if path_collision(rr.getActualQ(), start_q, table_z) or path_collision(start_q, q, table_z):
+                raise SystemExit("Collision check failed right before moving. ABORTED.")
             if not rc.moveJ(start_q, args.speed, args.acc) or not rc.moveJ(q, args.speed, args.acc):
                 raise SystemExit("Motion failed (protective stop / collision?). ABORTED. Check the robot.")
             time.sleep(1.0)                                  # let vibrations die out
