@@ -170,15 +170,16 @@ def main():
         samples = (yaml.safe_load(open(samples_path)) if os.path.exists(samples_path) else None) or []
         for i, pose, q in ok_targets:
             print(f"-> pose {i}")
-            rc.moveJ(start_q, args.speed, args.acc)      # always go through the safe start pose
-            rc.moveJ(q, args.speed, args.acc)
+            # moveJ returns False on protective stop / collision: STOP EVERYTHING (bug seen 26/11:
+            # the old version kept sending poses after a collision)
+            if not rc.moveJ(start_q, args.speed, args.acc) or not rc.moveJ(q, args.speed, args.acc):
+                raise SystemExit("Motion failed (protective stop / collision?). ABORTED. Check the robot.")
             time.sleep(1.0)                                  # let vibrations die out
             t_still = time.time()
             time.sleep(0.2)
             img, t_img = cam.get()
             if t_img < t_still:
-                print("   no fresh image, skipped")
-                continue
+                raise SystemExit("Camera stopped sending images (USB cable pulled?). ABORTED.")
             det = detect(img, pattern, objp, K, D)
             if det is None:
                 print("   board not visible, skipped")
@@ -194,7 +195,8 @@ def main():
                 yaml.safe_dump(samples, f)
             print(f"   saved {name} (PnP {err:.2f} px)")
         print("Back to start pose")
-        rc.moveJ(start_q, args.speed, args.acc)
+        if not rc.moveJ(start_q, args.speed, args.acc):
+            raise SystemExit("Return to start failed.")
         print(f"Done: {len(samples)} samples in {samples_path}")
     except KeyboardInterrupt:
         print("\nCancelled.")
