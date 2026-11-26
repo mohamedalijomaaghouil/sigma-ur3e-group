@@ -150,6 +150,9 @@ def main():
             if not q or not rc.getInverseKinematicsHasSolution(pose, start_q):
                 print(f"  pose {i}: no IK solution, skipped")
                 continue
+            if np.max(np.abs(np.degrees(q))) > 350:
+                print(f"  pose {i}: a joint would be beyond +-350 deg (limit 360), skipped")
+                continue
             jump = np.degrees(np.max(np.abs(np.array(q) - np.array(start_q))))
             if jump > 170:
                 print(f"  pose {i}: joint would turn {jump:.0f} deg, skipped")
