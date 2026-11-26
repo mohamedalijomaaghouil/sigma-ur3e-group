@@ -29,7 +29,10 @@ class Capture(Node):
         self.pattern = (args.cols, args.rows)  # inner corners
         self.bridge = CvBridge()
         self.frame = None
-        self.count = len([f for f in os.listdir(args.out) if f.endswith(".png")])
+        # next index = highest existing img_NNN + 1 (never overwrite, even if numbers have gaps)
+        idx = [int(f[4:-4]) for f in os.listdir(args.out)
+               if f.startswith("img_") and f.endswith(".png") and f[4:-4].isdigit()]
+        self.count = max(idx) + 1 if idx else 0
         self.info_saved = False
         self.create_subscription(Image, args.image_topic, self.on_image, 10)
         self.create_subscription(CameraInfo, args.info_topic, self.on_info, 10)

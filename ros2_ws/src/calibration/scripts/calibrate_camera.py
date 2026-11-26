@@ -33,7 +33,7 @@ def main():
     objp = np.zeros((args.cols * args.rows, 3), np.float32)
     objp[:, :2] = np.mgrid[0:args.cols, 0:args.rows].T.reshape(-1, 2) * args.square
 
-    files = sorted(glob.glob(os.path.join(args.images, "*.png")))
+    files = sorted(glob.glob(os.path.join(args.images, "img_*.png")))
     obj_pts, img_pts, used = [], [], []
     size = None
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-3)
