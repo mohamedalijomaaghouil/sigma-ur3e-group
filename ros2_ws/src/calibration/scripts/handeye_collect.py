@@ -1,76 +1,71 @@
 #!/usr/bin/env python3
-"""B3 - Collect hand-eye samples (eye-in-hand): robot pose base->tool0 + board pose camera->board.
+"""B3 - Collect hand-eye samples (eye-in-hand): robot TCP pose + board pose in the camera.
 
-Needs 3 things running:
+Robot pose is read DIRECTLY from the controller with RTDE (pip install ur_rtde), not from ROS TF:
+in Python, /tf at 500 Hz lags by seconds (tested 26/11), which gave wrong poses. RTDE also uses
+the robot's own factory kinematics calibration.
+  T_base_tcp = getActualTCPPose()  (UR 'base' frame = ROS frame 'base'; TCP = ROS 'tool0_controller')
+  q          = getActualQ()        (saved too, to recompute the flange pose if the TCP changes)
+
+Needs:
   T1: RealSense   ros2 launch realsense2_camera rs_launch.py rgb_camera.color_profile:=1280x720x30
-  T2: UR driver   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur3e robot_ip:=<IP> launch_rviz:=false
-  T3: this        python3 handeye_collect.py --calib data/calib_images/calibration_result.yaml --out data/handeye
+  T2: this        python3 handeye_collect.py --robot-ip 192.168.1.102 --out data/handeye
+(the ROS UR driver is NOT needed.)
 
-The chessboard stays FIXED on the table for the whole collection. Move the robot (freedrive or
-Move tab), stop, then press SPACE in the window. Aim for 15-25 poses with LARGE rotations
-(tilt the camera +-30..45 deg around all 3 axes). Press q to quit.
-
-Each sample = one image + one entry in samples.yaml:
-  T_base_tool0 (4x4, metres) and T_cam_board (4x4, metres).
+The chessboard stays FIXED. Move the robot, stop, press SPACE in the window. The script checks
+that the robot did not move for 0.5 s and uses an image taken after it stopped. 15-25 poses with
+LARGE rotations. q = quit.
 """
 import argparse
 import os
+import threading
+import time
 
 import cv2
 import numpy as np
 import rclpy
+import rtde_receive
 import yaml
 from cv_bridge import CvBridge
-from rclpy.duration import Duration
+from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
-from rclpy.time import Time
 from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import Image
-from tf2_ros import Buffer, TransformListener
 
 
-def tf_to_mat(tf):
-    t, q = tf.transform.translation, tf.transform.rotation
+def pose_to_mat(p):
     T = np.eye(4)
-    T[:3, :3] = Rotation.from_quat([q.x, q.y, q.z, q.w]).as_matrix()
-    T[:3, 3] = [t.x, t.y, t.z]
+    T[:3, :3] = Rotation.from_rotvec(p[3:6]).as_matrix()
+    T[:3, 3] = p[:3]
     return T
 
 
-class Collector(Node):
-    def __init__(self, args):
-        super().__init__("handeye_collect")
-        self.args = args
+class Camera(Node):
+    def __init__(self, topic):
+        super().__init__("handeye_camera")
         self.bridge = CvBridge()
-        self.frame = None
-        self.stamp = None
-        self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer, self)
-        self.create_subscription(Image, args.image_topic, self.on_image, 10)
+        self.lock = threading.Lock()
+        self.frame, self.t = None, 0.0
+        self.create_subscription(Image, topic, self.cb, 2)
 
-    def on_image(self, msg):
-        self.frame = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        self.stamp = msg.header.stamp
+    def cb(self, msg):
+        img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        with self.lock:
+            self.frame, self.t = img, time.time()
 
-    def robot_pose(self):
-        try:
-            tf = self.tf_buffer.lookup_transform(self.args.base, self.args.tool, Time(),
-                                                 timeout=Duration(seconds=0.2))
-            return tf_to_mat(tf)
-        except Exception as e:  # noqa: BLE001
-            self.get_logger().warn(f"TF {self.args.base}->{self.args.tool} not available: {e}")
-            return None
+    def get(self):
+        with self.lock:
+            return (None, 0.0) if self.frame is None else (self.frame.copy(), self.t)
 
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument("--robot-ip", default="192.168.1.102")
     p.add_argument("--calib", default="data/calib_images/calibration_result.yaml")
     p.add_argument("--out", default="data/handeye")
     p.add_argument("--square", type=float, default=21.0, help="square side in mm")
     p.add_argument("--cols", type=int, default=9)
     p.add_argument("--rows", type=int, default=6)
-    p.add_argument("--base", default="base_link")
-    p.add_argument("--tool", default="tool0")
     p.add_argument("--image-topic", default="/camera/camera/color/image_raw")
     args = p.parse_args()
     os.makedirs(args.out, exist_ok=True)
@@ -80,20 +75,26 @@ def main():
     pattern = (args.cols, args.rows)
     objp = np.zeros((args.cols * args.rows, 3), np.float32)
     objp[:, :2] = np.mgrid[0:args.cols, 0:args.rows].T.reshape(-1, 2) * args.square / 1000.0  # metres
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-3)
 
     samples_path = os.path.join(args.out, "samples.yaml")
-    samples = yaml.safe_load(open(samples_path)) if os.path.exists(samples_path) else []
-    samples = samples or []
+    samples = (yaml.safe_load(open(samples_path)) if os.path.exists(samples_path) else None) or []
+
+    robot = rtde_receive.RTDEReceiveInterface(args.robot_ip)
+    print(f"Connected to robot {args.robot_ip}, TCP = {np.round(robot.getActualTCPPose()[:3], 4)} m")
 
     rclpy.init()
-    node = Collector(args)
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-3)
+    cam = Camera(args.image_topic)
+    ex = SingleThreadedExecutor()
+    ex.add_node(cam)
+    threading.Thread(target=ex.spin, daemon=True).start()
+
     try:
-        while rclpy.ok():
-            rclpy.spin_once(node, timeout_sec=0.03)
-            if node.frame is None:
+        while True:
+            img, _ = cam.get()
+            if img is None:
+                time.sleep(0.05)
                 continue
-            img = node.frame
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             found, corners = cv2.findChessboardCorners(gray, pattern, cv2.CALIB_CB_FAST_CHECK)
             view = img.copy()
@@ -108,11 +109,28 @@ def main():
                 break
             if key != ord(" "):
                 continue
-            if not found:
-                node.get_logger().warn("Board not detected, sample NOT saved")
+
+            # 1) robot must be still for 0.5 s
+            p1 = np.array(robot.getActualTCPPose())
+            t_stop = time.time()
+            time.sleep(0.5)
+            p2 = np.array(robot.getActualTCPPose())
+            q = robot.getActualQ()
+            T1, T2 = pose_to_mat(p1), pose_to_mat(p2)
+            dt = np.linalg.norm(T2[:3, 3] - T1[:3, 3]) * 1000
+            dr = np.degrees(Rotation.from_matrix(T1[:3, :3].T @ T2[:3, :3]).magnitude())
+            if dt > 0.2 or dr > 0.05:
+                print(f"  Robot still moving ({dt:.2f} mm, {dr:.2f} deg in 0.5 s): NOT saved")
                 continue
-            T_bt = node.robot_pose()
-            if T_bt is None:
+            # 2) image taken after the robot stopped
+            img, t_img = cam.get()
+            if t_img < t_stop:
+                print("  No fresh camera image (camera stream stopped?): NOT saved")
+                continue
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            found, corners = cv2.findChessboardCorners(gray, pattern, None)
+            if not found:
+                print("  Board not detected: NOT saved")
                 continue
             corners = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
             ok, rvec, tvec = cv2.solvePnP(objp, corners, K, D)
@@ -121,18 +139,21 @@ def main():
             T_cb = np.eye(4)
             T_cb[:3, :3] = cv2.Rodrigues(rvec)[0]
             T_cb[:3, 3] = tvec.ravel()
+
             name = f"he_{len(samples):03d}.png"
             cv2.imwrite(os.path.join(args.out, name), img)
-            samples.append({"image": name, "pnp_rms_px": err,
-                            "T_base_tool0": T_bt.tolist(), "T_cam_board": T_cb.tolist()})
+            samples.append({"image": name, "pnp_rms_px": err, "q": list(q),
+                            "tcp_pose_rtde": p2.tolist(),
+                            "T_base_tool0": T2.tolist(),  # = base -> TCP (tool0_controller)
+                            "T_cam_board": T_cb.tolist()})
             with open(samples_path, "w") as f:
                 yaml.safe_dump(samples, f)
-            node.get_logger().info(
-                f"Saved sample {len(samples)-1}: tool0 at {np.round(T_bt[:3, 3]*1000, 1)} mm, "
-                f"board at {np.round(T_cb[:3, 3]*1000, 1)} mm from camera, PnP {err:.2f}px")
+            print(f"Saved sample {len(samples)-1}: TCP at {np.round(T2[:3, 3]*1000, 1)} mm, "
+                  f"board {np.round(T_cb[:3, 3]*1000, 1)} mm from camera, PnP {err:.2f} px")
     finally:
         cv2.destroyAllWindows()
-        node.destroy_node()
+        ex.shutdown()
+        cam.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
 

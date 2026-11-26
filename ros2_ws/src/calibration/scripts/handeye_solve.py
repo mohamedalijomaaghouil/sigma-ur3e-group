@@ -63,6 +63,21 @@ def main():
     print(f"Tool rotation between poses: max {max(ang):.1f} deg, median {np.median(ang):.1f} deg "
           f"(want max > 40 deg)\n")
 
+    # X-free consistency check: between 2 poses, the tool and the camera turn by the SAME angle.
+    A = [np.array(s["T_base_tool0"]) for s in samples]
+    B = [np.array(s["T_cam_board"]) for s in samples]
+    n = len(samples)
+    mis = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            a = Rotation.from_matrix((np.linalg.inv(A[j]) @ A[i])[:3, :3]).magnitude()
+            b = Rotation.from_matrix((B[j] @ np.linalg.inv(B[i]))[:3, :3]).magnitude()
+            mis[i, j] = np.degrees(abs(a - b))
+    per = np.median(mis, axis=1)
+    bad = [samples[k]["image"] for k in range(n) if per[k] > 2.0]
+    print("Angle mismatch tool vs camera (median per sample, deg):", np.round(per, 1))
+    print("Suspicious samples (>2 deg):", ", ".join(bad) if bad else "none", "\n")
+
     results = {}
     print(f"{'method':11s} {'x mm':>7s} {'y mm':>7s} {'z mm':>7s}  {'rx':>6s} {'ry':>6s} {'rz':>6s}"
           f"  | spread: t mean/max (mm)  R mean/max (deg)")
