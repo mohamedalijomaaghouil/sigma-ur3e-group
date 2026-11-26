@@ -48,3 +48,13 @@ def closest(sols,qref,limit=np.radians(355)):
         dist=np.max(np.abs(s-qref))
         if best is None or dist<best[0]: best=(dist,s)
     return None if best is None else best[1]
+
+
+def fk(q):
+    """Nominal UR3e forward kinematics, base -> flange (4x4)."""
+    d = [d1, 0, 0, d4, d5, d6]; a = [0, a2, a3, 0, 0, 0]; al = [np.pi/2, 0, 0, np.pi/2, -np.pi/2, 0]
+    T = np.eye(4)
+    for i in range(6):
+        ct, st, ca, sa = np.cos(q[i]), np.sin(q[i]), np.cos(al[i]), np.sin(al[i])
+        T = T @ np.array([[ct, -st*ca, st*sa, a[i]*ct], [st, ct*ca, -ct*sa, a[i]*st], [0, sa, ca, d[i]], [0, 0, 0, 1]])
+    return T

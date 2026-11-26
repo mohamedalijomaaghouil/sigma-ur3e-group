@@ -31,6 +31,7 @@ from rclpy.executors import SingleThreadedExecutor
 from scipy.spatial.transform import Rotation
 
 from handeye_collect import Camera, pose_to_mat
+from ur_ik import closest, fk, ik_all
 
 
 def mat_to_pose(T):
@@ -139,35 +140,37 @@ def main():
         print(f"Board centre in base: {np.round(P*1000)} mm, camera distance {dist0*1000:.0f} mm")
         print(f"{len(targets)} candidate poses")
 
-        rc = rtde_control.RTDEControlInterface(args.robot_ip)   # needs REMOTE mode
+        # Plan OFFLINE (analytic IK). Asking the robot for IK raises a protective error and kills
+        # the control script when a pose is unreachable (seen 26/11), so we never do that.
+        OFF = np.linalg.inv(fk(start_q)) @ T_tcp0          # flange -> TCP, measured
         ok_targets = []
         for i, T in enumerate(targets):
-            pose = mat_to_pose(T)
-            if not rc.isPoseWithinSafetyLimits(pose):
-                print(f"  pose {i}: outside safety limits, skipped")
+            sols = ik_all(T @ np.linalg.inv(OFF))
+            q = closest(sols, np.array(start_q), limit=np.radians(350))
+            if q is None:
+                print(f"  pose {i}: unreachable / beyond joint limits, skipped")
                 continue
-            q = rc.getInverseKinematics(pose, start_q)
-            if not q or not rc.getInverseKinematicsHasSolution(pose, start_q):
-                print(f"  pose {i}: no IK solution, skipped")
-                continue
-            if np.max(np.abs(np.degrees(q))) > 350:
-                print(f"  pose {i}: a joint would be beyond +-350 deg (limit 360), skipped")
-                continue
-            jump = np.degrees(np.max(np.abs(np.array(q) - np.array(start_q))))
-            if jump > 170:
+            jump = np.degrees(np.max(np.abs(q - np.array(start_q))))
+            if jump > 120:
                 print(f"  pose {i}: joint would turn {jump:.0f} deg, skipped")
                 continue
-            ok_targets.append((i, pose, q))
+            ok_targets.append((i, mat_to_pose(T), list(q)))
         print(f"{len(ok_targets)} reachable poses")
         if args.dry_run:
             print("Dry run: robot did NOT move.")
             return
 
         input("\nHand on the EMERGENCY STOP. Press ENTER to start (Ctrl+C to cancel)... ")
+        rc = rtde_control.RTDEControlInterface(args.robot_ip)   # needs REMOTE mode
+        for i, pose, q in list(ok_targets):
+            if not rc.isJointsWithinSafetyLimits(q):
+                print(f"  pose {i}: outside the robot safety limits, skipped")
+                ok_targets.remove((i, pose, q))
         samples_path = os.path.join(args.out, "samples.yaml")
         samples = (yaml.safe_load(open(samples_path)) if os.path.exists(samples_path) else None) or []
         for i, pose, q in ok_targets:
             print(f"-> pose {i}")
+            rc.moveJ(start_q, args.speed, args.acc)      # always go through the safe start pose
             rc.moveJ(q, args.speed, args.acc)
             time.sleep(1.0)                                  # let vibrations die out
             t_still = time.time()
