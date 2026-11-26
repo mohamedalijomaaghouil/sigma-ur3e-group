@@ -1,0 +1,62 @@
+# Builds the project dashboard (web/) and publishes it with GitHub Pages.
+# One-time setup by a repository admin:
+#   1. Settings → Pages → Build and deployment → Source: "GitHub Actions"
+#      (Pages on a private repository needs a GitHub Pro / Team / Education plan for the owner;
+#       the published site is public).
+#   2. Settings → Environments → github-pages → Deployment branches: allow "Taher".
+#   3. Actions → "Dashboard (GitHub Pages)" → Run workflow (or push to Taher).
+name: Dashboard (GitHub Pages)
+
+on:
+  push:
+    branches: [Taher]
+    paths:
+      - 'web/**'
+      - 'progress.yaml'
+      - 'docs/**'
+      - 'README.md'
+      - 'experiments/**'
+      - 'media/**'
+      - '.github/workflows/dashboard-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history for the Activity page
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        working-directory: web
+        run: npm ci
+      - name: Build (sync repository data, type-check, bundle)
+        working-directory: web
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

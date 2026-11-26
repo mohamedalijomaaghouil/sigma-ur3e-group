@@ -14,7 +14,7 @@ Read before working: [docs/architecture.md](docs/architecture.md), [docs/convent
 - Never modify, push to or merge into `main`. Never force-push or rewrite history.
 - Never merge or copy work from other members' branches without explicit approval.
 - Small commits: `<package or area>: <imperative summary>`. Push only after the branch owner reviews.
-- No issues, milestones, repository settings, GitHub Pages or deployments without approval.
+- No issues, milestones, repository settings or deployments without approval. Approved exception: the dashboard is deployed to GitHub Pages from `Taher` by `.github/workflows/dashboard-pages.yml` (the site is public).
 
 ## Engineering rules
 

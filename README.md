@@ -88,7 +88,9 @@ Details: [docs/SETUP.md](docs/SETUP.md).
 cd web && npm install && npm run dev   # http://127.0.0.1:5173
 ```
 
-Overview, interactive architecture, roadmap, progress and validation, team, results, documentation and Git activity, generated from the repository files. See [web/README.md](web/README.md).
+Overview, interactive architecture, roadmap, progress and validation, IBVS/PBVS sections, results, evidence, documentation and Git activity, generated from the repository files. See [web/README.md](web/README.md).
+
+Online (once GitHub Pages is enabled by the repository owner): https://mohamedalijomaaghouil.github.io/sigma-ur3e-group/ — built from the `Taher` branch by `.github/workflows/dashboard-pages.yml`. The site is public.
 
 ## Team
 

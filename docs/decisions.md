@@ -16,7 +16,7 @@ Agreed in planning on 26/11/2026 (Taher branch). They remain **proposals for the
 | D10 | Simulation and experiments | Unit tests → kinematic simulator → mock hardware/URSim → robot; `experiments/<subsystem>/<date>_<name>/` with `metrics.json` |
 | D11 | Team | One maintainer per package, several contributors; names assigned later |
 | D12 | GitHub | Work on `Taher` only; small commits; push after review; PR to `main` per validated module with approval; `progress.yaml` as source of truth |
-| D13 | Dashboard | React + TypeScript + Vite in `web/`, reads `progress.yaml`, experiments and docs; local only |
+| D13 | Dashboard | React + TypeScript + Vite in `web/`, reads `progress.yaml`, experiments and docs; published with GitHub Pages from `Taher` (approved 26/11/2026; the site is public once enabled) |
 | D14 | Roadmap | Phases, work packages, milestones and acceptance targets in [roadmap.md](roadmap.md) |
 
 ## Corrections recorded on 26/11/2026

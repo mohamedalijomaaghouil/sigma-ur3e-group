@@ -12,7 +12,7 @@ Status: agreed in planning on 26/11/2026 (D10–D12), pending confirmation by th
 | Other branches | Not merged or copied into `Taher`; coordination first |
 | Keeping up to date | `git fetch origin` then `git merge origin/main` into `Taher` when appropriate, after committing local work |
 | Pull requests | One per **validated** module, with its evidence (tests, experiment folder, dashboard page). Opened only with approval |
-| Repository settings | No issues, milestones, project boards, settings, GitHub Pages or deployments without approval |
+| Repository settings | No issues, milestones, project boards, settings or deployments without approval. The dashboard is published with GitHub Pages from `Taher` (approved 26/11/2026; public site) |
 
 ### Session checklist
 

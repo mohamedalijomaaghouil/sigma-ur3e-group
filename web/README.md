@@ -34,4 +34,8 @@ src/pages/                Overview, Architecture, Roadmap, Progress, Team, Resul
 src/styles.css            design tokens (dark and light themes) and components
 ```
 
-Later: live ROS 2 monitoring, camera view, 3D robot view, controller comparison pages. No deployment is configured.
+## Publishing
+
+`.github/workflows/dashboard-pages.yml` builds the dashboard on every push to `Taher` that touches the dashboard or its data, and deploys it with GitHub Pages. One-time setup by a repository admin is described at the top of that file. The published site is **public**: publish only approved material.
+
+Later: live ROS 2 monitoring, camera view, 3D robot view.
