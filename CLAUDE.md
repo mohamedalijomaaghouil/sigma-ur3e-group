@@ -6,7 +6,7 @@ Guidance for AI coding assistants working in this repository. Humans: see [READM
 
 UR3e + RGB camera (RealSense, RGB only) + OnRobot gripper, ROS 2 Humble. Assistive bottle opening: detect cap → visual servoing (IBVS, PBVS, hybrid — all mandatory) → grasp → unscrew → lift. Academic project: the team must understand and explain every method; reports are written by the team, not by AI.
 
-Read before working: [docs/architecture.md](docs/architecture.md), [docs/conventions.md](docs/conventions.md), [docs/workflow.md](docs/workflow.md), [progress.yaml](progress.yaml).
+Read before working: [docs/architecture.md](docs/architecture.md), [docs/conventions.md](docs/conventions.md), [docs/workflow.md](docs/workflow.md), [progress.yaml](progress.yaml). Visual servoing work: [docs/IBVS.md](docs/IBVS.md), [docs/PBVS.md](docs/PBVS.md), [docs/VISUAL_SERVOING_BENCHMARK.md](docs/VISUAL_SERVOING_BENCHMARK.md).
 
 ## Git
 
@@ -35,6 +35,8 @@ Read before working: [docs/architecture.md](docs/architecture.md), [docs/convent
 - `progress.yaml` (including `next_step`) and the dashboard data are maintained only by Mohamed Taher GUERBEJ. Change them only at the maintainer's request.
 - Acceptance numbers are preliminary until experiments support them.
 - Experiments: `experiments/<subsystem>/<YYYY-MM-DD>_<name>/` with `config.yaml`, `metrics.json`, `plots/`, `notes.md`.
+- Evidence: one YAML record per item in `media/evidence/` (contributor, task, date, commit, file or link); only approved, real material is shown.
+- Do not implement IBVS/PBVS/hybrid controllers before their prerequisites (tasks in `vs_tasks`) are met.
 
 ## Safety
 

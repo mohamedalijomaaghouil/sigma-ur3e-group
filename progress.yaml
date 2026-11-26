@@ -18,9 +18,9 @@ maintainer: Mohamed Taher GUERBEJ
 
 # The next concrete step, shown on the dashboard. Update it whenever the focus changes.
 next_step:
-  title: Start WP2 camera acquisition (software side)
+  title: Share the IBVS/PBVS guides and validate WP2 on the camera
   work_package: WP2
-  detail: "Camera launch file, ur3e_camera package (stream_check, dataset_recorder) with unit tests. Hardware validation waits for the RealSense model and profiles (Q2)."
+  detail: "Send docs/IBVS.md and docs/PBVS.md to the groups (W1 starts 30/11: IBVS-01, PBVS-01). Identify the RealSense model and profiles (Q2), then run stream_check on the real camera."
 
 project:
   name: sigma-ur3e-group
@@ -460,14 +460,14 @@ work_packages:
   - id: WP9
     title: Kinematic visual servoing simulator
     block: common
-    phase: 2
+    phase: 1
     milestone: M3
     status: planned
-    depends_on: [WP5]
+    depends_on: []
     blocked_by: []
     packages: [ur3e_simulation, ur3e_geometry]
     graded_steps: [S4]
-    description: Pure-Python simulator (camera projection, kinematic robot, target motion) shared by IBVS, PBVS and hybrid.
+    description: Pure-Python simulator shared by IBVS, PBVS and hybrid. Free-flying camera and target first (needed in W3), robot kinematics added after WP5.
     deliverables:
       - {name: Simulator with replayable target motions, acceptance: Same initial conditions reproducible for every controller}
     validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_applicable}
@@ -476,14 +476,14 @@ work_packages:
   - id: WP10
     title: IBVS (Group A)
     block: parallel
-    phase: 2
+    phase: 1
     milestone: M4
     status: planned
     depends_on: [WP5, WP8, WP9]
     blocked_by: [Q1]
     packages: [ur3e_ibvs]
     graded_steps: [S4]
-    description: Feature selection (observability, rank of the interaction matrix), depth approximation, control law, static then moving target.
+    description: Tasks IBVS-xx in vs_tasks (docs/IBVS.md); mathematics and simulation start in W1, hardware in W6. Feature selection (observability, rank of the interaction matrix), depth approximation, control law, static then moving target.
     deliverables:
       - {name: IBVS node on /ibvs/cmd_vel, acceptance: "Converges in simulation, then on a fixed bottle"}
     validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
@@ -492,14 +492,14 @@ work_packages:
   - id: WP11
     title: Cap pose estimation (Group B)
     block: parallel
-    phase: 2
+    phase: 1
     milestone: M3
     status: planned
     depends_on: [WP3, WP6, WP8]
     blocked_by: []
     packages: [ur3e_pose_estimation]
     graded_steps: [S3]
-    description: Ellipse geometry, DL keypoints and SfM compared against ArUco ground truth.
+    description: Tasks PBVS-xx in vs_tasks (docs/PBVS.md); mathematics and simulation start in W1, hardware in W6. Ellipse geometry, DL keypoints and SfM compared against ArUco ground truth.
     deliverables:
       - {name: Pose node on /perception/cap_pose, acceptance: Interchangeable methods with the same output}
       - {name: Pose comparison, acceptance: "Position error (mm) and axis error (degrees) across viewpoints and bottle models"}
@@ -509,14 +509,14 @@ work_packages:
   - id: WP12
     title: PBVS (Group B)
     block: parallel
-    phase: 2
+    phase: 1
     milestone: M4
     status: planned
     depends_on: [WP5, WP9, WP11]
     blocked_by: []
     packages: [ur3e_pbvs]
     graded_steps: [S4]
-    description: Desired relative pose from grasp.yaml, translation and θu errors, PBVS law, static then moving target.
+    description: Tasks PBVS-xx in vs_tasks (docs/PBVS.md); mathematics and simulation start in W1, hardware in W6. Desired relative pose from grasp.yaml, translation and θu errors, PBVS law, static then moving target.
     deliverables:
       - {name: PBVS node on /pbvs/cmd_vel, acceptance: "Converges in simulation, then on a fixed bottle"}
     validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
@@ -532,7 +532,7 @@ work_packages:
     blocked_by: []
     packages: [ur3e_hybrid]
     graded_steps: [S4]
-    description: 2.5D or other justified hybrid law built on the IBVS and PBVS cores; never cut from the plan.
+    description: Tasks HYB-01..04 in vs_tasks (docs/VISUAL_SERVOING_BENCHMARK.md). 2.5D or other justified hybrid law built on the IBVS and PBVS cores; never cut from the plan.
     deliverables:
       - {name: Hybrid node on /hybrid/cmd_vel, acceptance: "Converges in simulation, then on a fixed bottle"}
     validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
@@ -613,3 +613,796 @@ open_questions:
   - {id: Q8, question: "Is a person-held bottle allowed in the demo, and under which safeguards?", blocks: [WP16], ask: professors, status: open}
   - {id: Q9, question: "Exact twist convention of MoveIt Servo (Humble 2.5.x) and of the UR driver frames", blocks: [WP5], ask: technical check, status: open}
 
+# ---------------------------------------------------------------- visual servoing groups
+# Detailed plans: docs/IBVS.md, docs/PBVS.md, docs/VISUAL_SERVOING_BENCHMARK.md.
+# Acceptance values are preliminary engineering targets.
+vs_groups:
+- id: ibvs
+  name: Group A — IBVS
+  doc: docs/IBVS.md
+  work_packages:
+  - WP10
+  objective: Bring the gripper to the pre-grasp pose by driving image features to their desired values.
+  levels:
+  - id: L1
+    features: 4 ArUco corners
+    target: Static marker
+  - id: L2
+    features: 4 ArUco corners
+    target: Moving marker
+  - id: L3
+    features: Cap centre + area (normalised), orientation held
+    target: Static upright bottle
+  - id: L4
+    features: + ellipse / bottle-axis tilt features
+    target: Static bottle, various tilts
+  - id: L5
+    features: Selected markerless set
+    target: Moving bottle
+- id: pbvs
+  name: Group B — Pose estimation and PBVS
+  doc: docs/PBVS.md
+  work_packages:
+  - WP11
+  - WP12
+  objective: Estimate the 3D cap state from RGB and bring the gripper to the pre-grasp pose by driving the Cartesian pose error to zero.
+  levels:
+  - id: L1
+    features: ArUco + PnP
+    target: Static marker
+  - id: L2
+    features: ArUco + PnP
+    target: Moving marker
+  - id: L3
+    features: Ellipse-based pose
+    target: Static bottle
+  - id: L4
+    features: DL pose
+    target: Static bottle
+  - id: L5
+    features: SfM (multi-view)
+    target: Static bottle
+  - id: L6
+    features: Selected single-view RGB estimator
+    target: Moving bottle
+- id: hybrid
+  name: Hybrid (joint, mandatory)
+  doc: docs/VISUAL_SERVOING_BENCHMARK.md
+  work_packages:
+  - WP13
+  objective: 2.5D visual servoing combining the IBVS and PBVS cores.
+  levels: []
+
+vs_schedule:
+- week: W1
+  start: '2026-11-30'
+  end: '2026-12-06'
+  ibvs: Theory and interaction matrix
+  pbvs: Theory and pose error
+- week: W2
+  start: '2026-12-07'
+  end: '2026-12-13'
+  ibvs: ArUco feature extraction, point IBVS
+  pbvs: ArUco + PnP pose estimation
+- week: W3
+  start: '2026-12-14'
+  end: '2026-12-20'
+  ibvs: IBVS simulation
+  pbvs: PBVS simulation
+- week: W4
+  start: '2026-12-21'
+  end: '2027-01-03'
+  ibvs: 'Cap feature extraction, feature selection (holidays: offline)'
+  pbvs: 'Classical ellipse pose (holidays: offline)'
+- week: W5
+  start: '2027-01-04'
+  end: '2027-01-10'
+  ibvs: Markerless IBVS, depth approximation; hybrid formulation
+  pbvs: DL and SfM pose estimation; hybrid formulation
+- week: W6
+  start: '2027-01-11'
+  end: '2027-01-17'
+  ibvs: Static robot experiments; hybrid simulation
+  pbvs: Static robot experiments, pose benchmark; hybrid simulation
+- week: W7
+  start: '2027-01-18'
+  end: '2027-01-24'
+  ibvs: Moving target, robustness
+  pbvs: Moving target, robustness
+- week: W8
+  start: '2027-01-25'
+  end: '2027-01-31'
+  ibvs: Benchmark and hybrid on the robot
+  pbvs: Benchmark and hybrid on the robot
+
+vs_tasks:
+- id: IBVS-01
+  group: ibvs
+  title: Mathematical formulation
+  parent_wp: WP10
+  level: —
+  week: W1
+  status: planned
+  objective: Derive feature error, point and moment interaction matrices, control law and target-motion term.
+  depends_on: []
+  implementation: Formulation note; ur3e_ibvs/core/interaction.py
+  deliverables:
+  - Formulation note
+  - Interaction matrices with unit tests
+  acceptance:
+  - L matches finite differences of the projection (< 1e-6)
+  acceptance_preliminary: true
+  evidence_expected:
+  - Derivation figure
+  - Unit-test output
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_applicable
+    hardware: not_applicable
+  evidence: []
+- id: IBVS-02
+  group: ibvs
+  title: Point-based IBVS with ArUco
+  parent_wp: WP10
+  level: L1
+  week: W2
+  status: planned
+  objective: Controller using the 4 ArUco corners as features.
+  depends_on:
+  - IBVS-01
+  - ur3e_geometry
+  implementation: core/features_aruco.py, core/control_law.py, nodes/ibvs_node.py
+  deliverables:
+  - Node publishing /ibvs/cmd_vel from ArUco corners
+  acceptance:
+  - Zero twist at s = s*; runs on a recorded or synthetic stream
+  acceptance_preliminary: true
+  evidence_expected:
+  - Screenshot with current and desired corners
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_applicable
+  evidence: []
+- id: IBVS-03
+  group: ibvs
+  title: Simulation
+  parent_wp: WP10
+  level: L1
+  week: W3
+  status: planned
+  objective: Feature convergence in the shared kinematic simulator (free-flying camera).
+  depends_on:
+  - IBVS-02
+  - WP9
+  implementation: Simulation script with random starts, metrics.json
+  deliverables:
+  - Convergence results and plots
+  acceptance:
+  - '20 random starts (±10 cm, ±20°): mean corner error < 0.5 px within 10 s, features stay in the image'
+  acceptance_preliminary: true
+  evidence_expected:
+  - Image trajectories
+  - Error norm vs time
+  - Velocity plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_applicable
+  evidence: []
+- id: IBVS-04
+  group: ibvs
+  title: Cap feature extraction
+  parent_wp: WP10
+  level: L3
+  week: W4
+  status: planned
+  objective: Centre, area, normalised moments, ellipse shape and bottle-axis line from the shared detector and ellipse fit.
+  depends_on:
+  - WP8
+  implementation: core/features_cap.py
+  deliverables:
+  - Features on recorded datasets
+  - Ellipse-centre bias analysis
+  acceptance:
+  - Centre within 2 px of the ArUco-derived reference on the test set; bias vs tilt quantified
+  acceptance_preliminary: true
+  evidence_expected:
+  - Annotated images
+  - Bias-vs-tilt plot
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_applicable
+  evidence: []
+- id: IBVS-05
+  group: ibvs
+  title: Feature selection and observability
+  parent_wp: WP10
+  level: L3–L4
+  week: W4
+  status: planned
+  objective: Rank and conditioning of candidate interaction matrices over the workspace.
+  depends_on:
+  - IBVS-03
+  - IBVS-04
+  implementation: Analysis script
+  deliverables:
+  - Report and chosen feature set
+  acceptance:
+  - Chosen set has rank 3 (L3) or 5 (L4–L5) everywhere in the workspace; cond(L) reported
+  acceptance_preliminary: true
+  evidence_expected:
+  - cond(L) maps
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_applicable
+  evidence: []
+- id: IBVS-06
+  group: ibvs
+  title: Depth approximation
+  parent_wp: WP10
+  level: L3
+  week: W5
+  status: planned
+  objective: Depth for the interaction matrix from the cap size; sensitivity to depth error.
+  depends_on:
+  - IBVS-04
+  implementation: core/depth.py
+  deliverables:
+  - Depth estimator and evaluation
+  acceptance:
+  - Depth error reported vs distance; convergence kept with ±30 % depth error in simulation
+  acceptance_preliminary: true
+  evidence_expected:
+  - Estimated vs reference depth plot
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_applicable
+  evidence: []
+- id: IBVS-07
+  group: ibvs
+  title: Static target on the UR3e
+  parent_wp: WP10
+  level: L1, L3–L4
+  week: W6
+  status: planned
+  objective: 'Validated IBVS on the robot: ArUco first, then the markerless feature set.'
+  depends_on:
+  - WP5
+  - WP3
+  - WP6
+  - IBVS-02
+  - IBVS-05
+  - IBVS-06
+  implementation: Hardware runs at reduced speed (custom controller, then MoveIt Servo)
+  deliverables:
+  - Logged runs in experiments/ibvs/
+  acceptance:
+  - 'L1: < 5 mm and < 2° vs ArUco reference; L3–L4: < 10 mm and < 5°'
+  acceptance_preliminary: true
+  evidence_expected:
+  - Video with feature overlay and robot view
+  - Setup photo
+  - Error plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: IBVS-08
+  group: ibvs
+  title: Moving target
+  parent_wp: WP10
+  level: L2, L5
+  week: W7
+  status: planned
+  objective: Reactive tracking with the target-motion term.
+  depends_on:
+  - IBVS-07
+  implementation: Target-motion compensation
+  deliverables:
+  - Tracking runs
+  acceptance:
+  - Bounded tracking error for slow motions (quantified); no target loss in reference trials
+  acceptance_preliminary: true
+  evidence_expected:
+  - Tracking video
+  - Tracking-error plot
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: IBVS-09
+  group: ibvs
+  title: Robustness
+  parent_wp: WP10
+  level: L1–L5
+  week: W7
+  status: planned
+  objective: Noise, occlusion, depth and calibration errors.
+  depends_on:
+  - IBVS-07
+  implementation: Simulation sweeps and selected hardware runs
+  deliverables:
+  - Robustness table
+  acceptance:
+  - Success rate vs perturbation reported
+  acceptance_preliminary: true
+  evidence_expected:
+  - Robustness plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: IBVS-10
+  group: ibvs
+  title: Benchmark
+  parent_wp: WP16
+  level: all
+  week: W8
+  status: planned
+  objective: IBVS runs of the common benchmark.
+  depends_on:
+  - IBVS-07
+  - IBVS-08
+  implementation: Benchmark protocol, both backends
+  deliverables:
+  - Benchmark entries
+  acceptance:
+  - Complete IBVS benchmark table
+  acceptance_preliminary: true
+  evidence_expected:
+  - Comparative videos and plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: PBVS-01
+  group: pbvs
+  title: Mathematical formulation
+  parent_wp: WP12
+  level: —
+  week: W1
+  status: planned
+  objective: Symmetry-aware pose error, PBVS laws (tool-frame and object-centred), moving-target term.
+  depends_on: []
+  implementation: Formulation note; core/pose_error.py, core/control_law.py
+  deliverables:
+  - Formulation note
+  - Unit tests
+  acceptance:
+  - Zero error at goal; rotating the cap about its axis does not change the error; θu matches scipy
+  acceptance_preliminary: true
+  evidence_expected:
+  - Derivation figure
+  - Unit-test output
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_applicable
+    hardware: not_applicable
+  evidence: []
+- id: PBVS-02
+  group: pbvs
+  title: ArUco + PnP reference
+  parent_wp: WP11
+  level: L1
+  week: W2
+  status: planned
+  objective: Reference cap pose from a marker on the cap (IPPE).
+  depends_on:
+  - WP3
+  implementation: ur3e_pose_estimation method aruco
+  deliverables:
+  - /perception/cap_pose from markers
+  acceptance:
+  - 'Static repeatability over 100 frames: < 1 mm and < 0.5° std at 30 cm'
+  acceptance_preliminary: true
+  evidence_expected:
+  - Image with marker frame overlay
+  - Repeatability plot
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_applicable
+    hardware: not_started
+  evidence: []
+- id: PBVS-03
+  group: pbvs
+  title: Simulation
+  parent_wp: WP12
+  level: L1
+  week: W3
+  status: planned
+  objective: Cartesian error convergence in the shared simulator; both laws compared.
+  depends_on:
+  - PBVS-01
+  - WP9
+  implementation: Simulation script, noisy pose input
+  deliverables:
+  - Convergence results and plots
+  acceptance:
+  - '20 random starts: final error < 1 mm and < 0.5° (noise-free)'
+  acceptance_preliminary: true
+  evidence_expected:
+  - 3D trajectories
+  - Error convergence plots
+  - Cap image path
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_applicable
+  evidence: []
+- id: PBVS-04
+  group: pbvs
+  title: Classical ellipse-based pose
+  parent_wp: WP11
+  level: L3
+  week: W4
+  status: planned
+  objective: Circle pose from the cap ellipse with ambiguity resolution.
+  depends_on:
+  - WP3
+  - WP8
+  implementation: ur3e_pose_estimation method ellipse
+  deliverables:
+  - Pose node and synthetic tests
+  acceptance:
+  - 'Synthetic: exact recovery; real static at 30 cm: < 10 mm and < 5° vs ArUco'
+  acceptance_preliminary: true
+  evidence_expected:
+  - Images with both candidate normals
+  - Error plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_applicable
+    hardware: not_started
+  evidence: []
+- id: PBVS-05
+  group: pbvs
+  title: Deep-learning pose estimation
+  parent_wp: WP11
+  level: L4
+  week: W5
+  status: planned
+  objective: Fine-tuned mask/keypoint network + geometric solve; metric-depth baseline.
+  depends_on:
+  - WP8
+  - PBVS-04
+  implementation: ur3e_pose_estimation method dl; training in dl/
+  deliverables:
+  - DL pose node
+  - Training record
+  acceptance:
+  - Accuracy and latency on the PBVS-04 test set reported
+  acceptance_preliminary: true
+  evidence_expected:
+  - Prediction overlays
+  - Training curves
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_applicable
+    hardware: not_started
+  evidence: []
+- id: PBVS-06
+  group: pbvs
+  title: Structure from Motion
+  parent_wp: WP11
+  level: L5
+  week: W5
+  status: planned
+  objective: Multi-view triangulation of the cap centre and bottle axis from known robot poses.
+  depends_on:
+  - WP5
+  - WP6
+  implementation: ur3e_pose_estimation method sfm; scan script
+  deliverables:
+  - SfM estimator
+  acceptance:
+  - 'Static bottle: < 5 mm and < 3° vs ArUco; residuals reported'
+  acceptance_preliminary: true
+  evidence_expected:
+  - Scan video
+  - 3D plot of rays and reconstructed axis
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_applicable
+    hardware: not_started
+  evidence: []
+- id: PBVS-07
+  group: pbvs
+  title: Pose estimation benchmark
+  parent_wp: WP11
+  level: L3–L5
+  week: W6
+  status: planned
+  objective: Classical vs DL vs SfM against ground truth (graded step 3).
+  depends_on:
+  - PBVS-02
+  - PBVS-04
+  - PBVS-05
+  - PBVS-06
+  implementation: Same dataset and viewpoints for every method
+  deliverables:
+  - Comparison table and plots
+  acceptance:
+  - Position (mm), axis (°), latency and robustness per viewpoint and bottle model
+  acceptance_preliminary: true
+  evidence_expected:
+  - Comparison plots
+  - Overlay grid
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_applicable
+    hardware: not_started
+  evidence: []
+- id: PBVS-08
+  group: pbvs
+  title: Static target on the UR3e
+  parent_wp: WP12
+  level: L1, L3–L4
+  week: W6
+  status: planned
+  objective: 'Validated PBVS on the robot: ArUco first, then the best markerless estimator.'
+  depends_on:
+  - WP5
+  - WP6
+  - PBVS-02
+  - PBVS-03
+  implementation: Hardware runs (custom controller, then MoveIt Servo)
+  deliverables:
+  - Logged runs in experiments/pbvs/
+  acceptance:
+  - 'L1: < 5 mm and < 2° vs ArUco; markerless: < 10 mm and < 5°'
+  acceptance_preliminary: true
+  evidence_expected:
+  - Video with estimated cap frame and robot
+  - Setup photo
+  - Error plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: PBVS-09
+  group: pbvs
+  title: Moving target
+  parent_wp: WP12
+  level: L2, L6
+  week: W7
+  status: planned
+  objective: Reactive tracking with cap-velocity feed-forward.
+  depends_on:
+  - PBVS-08
+  implementation: Feed-forward term
+  deliverables:
+  - Tracking runs
+  acceptance:
+  - Bounded tracking error for slow motions (quantified); no target loss in reference trials
+  acceptance_preliminary: true
+  evidence_expected:
+  - Tracking video
+  - Tracking plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: PBVS-10
+  group: pbvs
+  title: Robustness
+  parent_wp: WP12
+  level: L1–L6
+  week: W7
+  status: planned
+  objective: Pose noise, latency and hand-eye perturbation.
+  depends_on:
+  - PBVS-08
+  implementation: Simulation sweeps and selected hardware runs
+  deliverables:
+  - Robustness table
+  acceptance:
+  - Success rate vs perturbation reported
+  acceptance_preliminary: true
+  evidence_expected:
+  - Robustness plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: PBVS-11
+  group: pbvs
+  title: Benchmark
+  parent_wp: WP16
+  level: all
+  week: W8
+  status: planned
+  objective: PBVS runs of the common benchmark.
+  depends_on:
+  - PBVS-08
+  - PBVS-09
+  implementation: Benchmark protocol, both backends
+  deliverables:
+  - Benchmark entries
+  acceptance:
+  - Complete PBVS benchmark table
+  acceptance_preliminary: true
+  evidence_expected:
+  - Comparative videos and plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: HYB-01
+  group: hybrid
+  title: Hybrid formulation
+  parent_wp: WP13
+  level: —
+  week: W5
+  status: planned
+  objective: 2.5D features (image point, log depth ratio, θu) and interaction matrix.
+  depends_on:
+  - IBVS-01
+  - PBVS-01
+  implementation: ur3e_hybrid core
+  deliverables:
+  - Formulation and unit tests
+  acceptance:
+  - Interaction matrix matches finite differences
+  acceptance_preliminary: true
+  evidence_expected:
+  - Derivation figure
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_applicable
+    hardware: not_applicable
+  evidence: []
+- id: HYB-02
+  group: hybrid
+  title: Hybrid in simulation
+  parent_wp: WP13
+  level: L1
+  week: W6
+  status: planned
+  objective: Same starts as IBVS and PBVS.
+  depends_on:
+  - HYB-01
+  - IBVS-03
+  - PBVS-03
+  implementation: Simulation script
+  deliverables:
+  - Convergence results
+  acceptance:
+  - Converges from all starts with the target in view
+  acceptance_preliminary: true
+  evidence_expected:
+  - Trajectories and error plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_applicable
+  evidence: []
+- id: HYB-03
+  group: hybrid
+  title: Hybrid on the robot, static target
+  parent_wp: WP13
+  level: L1, L3
+  week: W8
+  status: planned
+  objective: Hardware validation of the hybrid law.
+  depends_on:
+  - HYB-02
+  - IBVS-07
+  - PBVS-08
+  implementation: Hardware runs
+  deliverables:
+  - Logged runs in experiments/hybrid/
+  acceptance:
+  - Same thresholds as IBVS/PBVS L1
+  acceptance_preliminary: true
+  evidence_expected:
+  - Video
+  - Error plots
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+- id: HYB-04
+  group: hybrid
+  title: Hybrid on the robot, moving target
+  parent_wp: WP13
+  level: L2, L5
+  week: W8
+  status: planned
+  objective: Tracking with the hybrid law.
+  depends_on:
+  - HYB-03
+  implementation: Tracking runs
+  deliverables:
+  - Tracking results
+  acceptance:
+  - Bounded tracking error, reported
+  acceptance_preliminary: true
+  evidence_expected:
+  - Tracking video
+  validation:
+    implementation: not_started
+    offline: not_started
+    simulation: not_started
+    hardware: not_started
+  evidence: []
+
+benchmark:
+  doc: docs/VISUAL_SERVOING_BENCHMARK.md
+  controllers:
+  - IBVS
+  - PBVS
+  - Hybrid
+  stages:
+  - id: A
+    name: Kinematic simulation
+  - id: B
+    name: Robot + ArUco, static
+  - id: C
+    name: Robot + ArUco, moving
+  - id: D
+    name: Robot markerless, static
+  - id: E
+    name: Robot markerless, moving
+  scenarios:
+  - id: B1
+    name: Static target, nominal start
+  - id: B2
+    name: Static target, set of initial configurations
+  - id: B3
+    name: Different bottle orientations
+  - id: B4
+    name: Moving target
+  - id: B5
+    name: Calibration uncertainty
+  - id: B6
+    name: Measurement noise
+  - id: B7
+    name: Partial occlusion
+  - id: B8
+    name: Final grasp alignment
+  metrics:
+  - Success rate
+  - Convergence time (s)
+  - Final position error (mm)
+  - Final axis error (deg)
+  - Path length / efficiency
+  - Velocity smoothness
+  - Latency (ms)
+  - Robustness vs perturbation

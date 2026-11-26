@@ -1,0 +1,14 @@
+# Copy to media/evidence/<YYYY-MM-DD>_<task>_<short-name>.yaml (files starting with _ are ignored).
+title: ""
+task: ""                 # WP2, IBVS-03, PBVS-04, HYB-02, ...
+subsystem: ""            # camera, intrinsic_calibration, hand_eye, ibvs, pbvs, pose_estimation, hybrid, ...
+type: picture            # picture | screenshot | video | plot | data | document
+contributor: ""
+date: ""                 # YYYY-MM-DD
+description: ""
+validation_level: ""     # offline | simulation | hardware
+status: draft            # draft | approved (set by the progress maintainer)
+git_commit: ""
+experiment: ""           # optional: experiments/<subsystem>/<run>
+file: ""                 # small file in media/ (picture, screenshot, plot)
+url: ""                  # or a link (large video on the shared Drive)

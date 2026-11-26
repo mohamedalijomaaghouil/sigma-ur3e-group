@@ -42,7 +42,10 @@ Three blocks: **common upstream** (camera, calibration, detection), **two parall
 | [docs/conventions.md](docs/conventions.md) | Frames, `T_A_B` notation, units, twists, robot model consistency |
 | [docs/decisions.md](docs/decisions.md) | Architecture decisions D1–D14 |
 | [docs/roadmap.md](docs/roadmap.md) | Phases, work packages, milestones, acceptance targets |
-| [docs/workflow.md](docs/workflow.md) | Git workflow, code rules, experiments, progress tracking |
+| [docs/workflow.md](docs/workflow.md) | Git workflow, code rules, experiments, evidence, progress tracking |
+| [docs/IBVS.md](docs/IBVS.md) | Group A development guide: image-based visual servoing |
+| [docs/PBVS.md](docs/PBVS.md) | Group B development guide: pose estimation and position-based visual servoing |
+| [docs/VISUAL_SERVOING_BENCHMARK.md](docs/VISUAL_SERVOING_BENCHMARK.md) | Common IBVS / PBVS / hybrid comparison protocol and hybrid tasks |
 | [docs/SETUP.md](docs/SETUP.md) | Installation and build |
 | [docs/PLAN.md](docs/PLAN.md) | The group's first plan (10/11/2026) |
 
@@ -51,7 +54,7 @@ Three blocks: **common upstream** (camera, calibration, detection), **two parall
 ```text
 ros2_ws/src/   ROS 2 packages, one folder per package (created as the work needs them)
 experiments/   experiment configurations, metrics.json, plots (raw data stays outside Git)
-media/         approved diagrams, figures and demo media
+media/         approved diagrams, figures and demo media; media/evidence/ records per contributor
 docs/          architecture, conventions, roadmap, workflow, setup
 dl/            dataset scripts and training (no data, no weights)
 reports/       one LaTeX report per graded step

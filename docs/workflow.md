@@ -103,9 +103,55 @@ experiments/<subsystem>/<YYYY-MM-DD>_<short_name>/
 
 Raw data (images, bags) stays outside Git; `config.yaml` records where it is.
 
-## 7. Progress tracking
+## 7. Evidence and individual contributions
 
-[`progress.yaml`](../progress.yaml) is the single source of truth for work packages, milestones, open questions and validation status. The dashboard reads it.
+Every team member documents **their own** work: code is not enough. For every meaningful completed task, the contributor adds the evidence that shows it works, with the task, date, experiment and code version. Not every task needs a video, but every major experimental milestone needs visual evidence.
+
+| Type | Examples | Where |
+| --- | --- | --- |
+| Source code | Commits, pull requests | Git |
+| Pictures | Setup, calibration board, robot configuration | `media/figures/` (small) |
+| Screenshots | RViz, simulation, detections, TF tree | `media/figures/` |
+| Videos | Robot motion, visual servoing, manipulation | Shared Drive (linked), optional small poster image in `media/figures/` |
+| Quantitative results | CSV, JSON, plots, metrics | `experiments/<subsystem>/<run>/` |
+| Technical notes | Method, observations, limitations | `experiments/<subsystem>/<run>/notes.md` |
+
+| Task | Expected visual evidence |
+| --- | --- |
+| Camera acquisition | RGB stream screenshot, stream-check report |
+| Camera calibration | Board detections, undistorted images, error plots |
+| Hand-eye calibration | Robot configurations, TF visualisation |
+| TCP calibration | Video of the procedure |
+| Cartesian control | Video of the robot following commanded twists, tracking plots |
+| Object detection | Annotated images, detection video |
+| IBVS | Video with current/desired features and error convergence |
+| PBVS | Video with the estimated cap frame and the robot trajectory |
+| Hybrid | Side-by-side comparison videos |
+| Unscrewing | Complete bottle-opening video |
+
+**How to record an item:** add one small YAML file per item in `media/evidence/` (one file each, so there are no merge conflicts), named `<YYYY-MM-DD>_<task>_<short-name>.yaml`; copy `media/evidence/_template.yaml`:
+
+```yaml
+title: IBVS with 4 ArUco corners converging in simulation
+task: IBVS-03                 # work package or task id (WP2, IBVS-03, PBVS-04, HYB-02, ...)
+subsystem: ibvs               # camera, intrinsic_calibration, hand_eye, ibvs, pbvs, pose_estimation, hybrid, ...
+type: plot                    # picture | screenshot | video | plot | data | document
+contributor: <full name>
+date: 2026-12-10
+description: Feature trajectories from 20 random starts; all converge in < 6 s.
+validation_level: simulation  # offline | simulation | hardware
+status: draft                 # draft until the progress maintainer approves it, then approved
+git_commit: <hash of the code used>
+experiment: experiments/ibvs/2026-12-10_aruco_sim   # optional
+file: media/figures/ibvs_aruco_sim_2026-12-10.png   # small file in the repository, or
+url: ""                                              # link to a large video on the shared Drive
+```
+
+Rules: only real, approved material is shown on the dashboard (`status: approved`); nothing is invented or staged; faces of people other than consenting team members are not published; videos stay on the shared Drive and are linked.
+
+## 8. Progress tracking
+
+[`progress.yaml`](../progress.yaml) is the single source of truth for work packages, visual servoing tasks (`vs_tasks`), milestones, open questions and validation status. The dashboard reads it.
 
 **Maintainer:** only Mohamed Taher GUERBEJ edits `progress.yaml` (statuses, evidence, next step, milestones) and the dashboard data. Other members send their results and status updates to the maintainer (message, issue or pull request comment); they do not edit the file themselves.
 
@@ -114,7 +160,7 @@ Raw data (images, bags) stays outside Git; `config.yaml` records where it is.
 - Acceptance numbers are preliminary until experimental evidence supports them; changes are explained in the experiment notes.
 - GitHub issues and milestones may mirror `progress.yaml` later, with approval.
 
-## 8. Scope: now vs later
+## 9. Scope: now vs later
 
 | Now | Later, when needed |
 | --- | --- |

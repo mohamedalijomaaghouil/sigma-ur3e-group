@@ -34,7 +34,7 @@ Dates are targets. The demo date (09/02/2027, afternoon) comes from the updated 
 | WP6 | Hand-eye and TCP calibration | Upstream | WP3, WP4 | Camera mount, gripper model |
 | WP7 | Mechanical feasibility and fixed-bottle opening | Downstream | — | Gripper model |
 | WP8 | Shared object detection | Upstream | WP2, WP3 | — |
-| WP9 | Kinematic visual servoing simulator | Common | WP5 | — |
+| WP9 | Kinematic visual servoing simulator (free-flying camera first, robot later) | Common | — | — |
 | WP10 | IBVS (Group A) | Parallel | WP5, WP8, WP9 | Camera mount |
 | WP11 | Cap pose estimation (Group B) | Parallel | WP3, WP6, WP8 | — |
 | WP12 | PBVS (Group B) | Parallel | WP5, WP9, WP11 | — |
@@ -45,6 +45,29 @@ Dates are targets. The demo date (09/02/2027, afternoon) comes from the updated 
 | WP17 | Robot learning extensions | Optional | WP9, WP13 | Deferred |
 
 Reports: one LaTeX report per graded step, written by the group (they are checked for plagiarism and AI-generated text). Report deadlines are to be confirmed.
+
+## Parallel visual servoing plan (Groups A and B)
+
+Detailed guides: [IBVS.md](IBVS.md) (Group A), [PBVS.md](PBVS.md) (Group B), [VISUAL_SERVOING_BENCHMARK.md](VISUAL_SERVOING_BENCHMARK.md) (common comparison and the mandatory hybrid tasks). Tasks `IBVS-01…10`, `PBVS-01…11` and `HYB-01…04` are tracked in `progress.yaml` (`vs_tasks`) and on the dashboard.
+
+Both groups start now with mathematics and simulation, in parallel with the common foundation; hardware work starts when camera calibration, Cartesian control and hand-eye calibration are validated. Strategy for both: **theory → simulation → ArUco on the robot → real bottle**.
+
+| Week | Dates (targets) | Group A — IBVS | Group B — PBVS |
+| --- | --- | --- | --- |
+| W1 | 30/11 – 06/12 | Theory and interaction matrix (IBVS-01) | Theory and pose error (PBVS-01) |
+| W2 | 07/12 – 13/12 | ArUco feature extraction, point IBVS (IBVS-02) | ArUco + PnP pose estimation (PBVS-02) |
+| W3 | 14/12 – 20/12 | IBVS simulation (IBVS-03) | PBVS simulation (PBVS-03) |
+| W4 | 21/12 – 03/01 | Cap features, feature selection (IBVS-04/05) — holidays, offline | Classical ellipse pose (PBVS-04) — holidays, offline |
+| W5 | 04/01 – 10/01 | Markerless IBVS, depth approximation (IBVS-06); hybrid formulation (HYB-01) | DL and SfM pose (PBVS-05/06); hybrid formulation (HYB-01) |
+| W6 | 11/01 – 17/01 | Static robot experiments (IBVS-07); hybrid simulation (HYB-02) | Static robot experiments (PBVS-08), pose benchmark (PBVS-07); hybrid simulation |
+| W7 | 18/01 – 24/01 | Moving target, robustness (IBVS-08/09) | Moving target, robustness (PBVS-09/10) |
+| W8 | 25/01 – 31/01 | Benchmark, hybrid on the robot (IBVS-10, HYB-03/04) | Benchmark, hybrid on the robot (PBVS-11, HYB-03/04) |
+
+Relative schedule: actual dates depend on lab access, calibration progress and availability. Mechanical feasibility (WP7) runs in parallel. Each group delivers a complete, independently testable pipeline on the shared perception and execution layers.
+
+## Evidence
+
+Every member documents their own work with code, pictures, screenshots, videos, metrics and short notes (see [workflow.md](workflow.md#7-evidence-and-individual-contributions)); the dashboard shows approved evidence per task and per group.
 
 ## Milestones
 
