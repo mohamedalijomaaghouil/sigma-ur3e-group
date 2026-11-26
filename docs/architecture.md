@@ -103,6 +103,8 @@ The current `ros2_ws/src/` contains placeholder folders from the initial scaffol
 
 The same downstream nodes work with three interchangeable sources, selected in `ur3e_bringup`: the RealSense camera, a recorded `rosbag2` (`ros2 bag play --clock`, `use_sim_time`), and later a simulated camera. All publish the topics above with the frame `camera_color_optical_frame`. Saved image folders are consumed offline by scripts that call the `core/` functions directly (no ROS needed).
 
+QoS: image and `camera_info` subscriptions use **reliable, keep last 5** by default (configurable); best effort lost most large frames across processes in our measurement (`experiments/camera/2026-11-26_image_qos_probe/`).
+
 Rules: consumers use `header.stamp` (never "now") and look up TF at that stamp; images older than a few frame periods are treated as "no measurement"; the controller timeout (D7) is the final safety net.
 
 ## 5. Calibration flow

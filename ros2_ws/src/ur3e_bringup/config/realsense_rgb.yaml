@@ -1,0 +1,25 @@
+# RealSense parameters for RGB-only acquisition (decision D2).
+# The colour profile is NOT set here: it is a required launch argument,
+# because the camera model and its supported profiles are not confirmed yet (open question Q2).
+/**:
+  ros__parameters:
+    enable_color: true
+    rgb_camera.color_format: RGB8        # published encoding: rgb8; consumers request their encoding through cv_bridge
+    # Everything else off: perception is RGB only.
+    enable_depth: false
+    enable_infra: false
+    enable_infra1: false
+    enable_infra2: false
+    enable_gyro: false
+    enable_accel: false
+    enable_motion: false
+    enable_sync: false
+    enable_rgbd: false
+    pointcloud.enable: false
+    align_depth.enable: false
+    # The camera pose comes from hand-eye calibration, not from the driver's TF tree (D3).
+    publish_tf: false
+    # Device handling
+    initial_reset: false
+    reconnect_timeout: 6.0
+    wait_for_device_timeout: -1.0

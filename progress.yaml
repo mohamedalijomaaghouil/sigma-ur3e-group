@@ -332,7 +332,7 @@ work_packages:
     block: upstream
     phase: 1
     milestone: M1
-    status: planned
+    status: in_progress
     depends_on: []
     blocked_by: [Q2]
     packages: [ur3e_bringup, ur3e_camera]
@@ -342,8 +342,12 @@ work_packages:
       - {name: "Camera launch file (RGB only, profile parameter)", acceptance: "Depth disabled; frame_id = camera_color_optical_frame", preliminary: true}
       - {name: stream_check node, acceptance: "≥ 29 Hz over 5 min at the chosen 30 Hz profile; image size equals camera_info size", preliminary: true}
       - {name: dataset_recorder node, acceptance: "Dataset folder with images, camera_info, frames.csv and manifest.yaml"}
-    validation: {implementation: not_started, offline: not_started, simulation: not_applicable, hardware: not_started}
-    evidence: []
+    validation: {implementation: done, offline: passed, simulation: not_applicable, hardware: not_started}
+    evidence:
+      - {label: Camera launch file, path: ros2_ws/src/ur3e_bringup/launch/camera.launch.py}
+      - {label: ur3e_camera package, path: ros2_ws/src/ur3e_camera}
+      - {label: Unit tests (16 passed), path: ros2_ws/src/ur3e_camera/test}
+      - {label: QoS measurement, path: experiments/camera/2026-11-26_image_qos_probe}
 
   - id: WP3
     title: Intrinsic camera calibration

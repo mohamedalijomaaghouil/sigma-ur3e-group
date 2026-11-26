@@ -5,7 +5,7 @@ Agreed in planning on 26/11/2026 (Taher branch). They remain **proposals for the
 | ID | Decision | Summary |
 | --- | --- | --- |
 | D1 | Repository and packages | One folder per package under `ros2_ws/src/`; `core/` (pure) + `nodes/` (ROS); added `ur3e_geometry` and `ur3e_pose_estimation`; `ur3e_learning` and `ur3e_interfaces` deferred; top-level `experiments/`, `media/`, `web/` |
-| D2 | Camera interface | RGB only, configurable profile; `/camera/color/image_raw` + paired `camera_info` matching the real resolution and calibration; raw images, undistort points; explicit encodings; best-effort QoS; `rosbag2` for recording and replay |
+| D2 | Camera interface | RGB only, configurable profile; `/camera/color/image_raw` + paired `camera_info` matching the real resolution and calibration; raw images, undistort points; explicit encodings; image QoS **reliable, keep last 5** (changed from best effort after measurement, see below); `rosbag2` for recording and replay |
 | D3 | Frames and units | `T_A_B` maps B → A; SI units; quaternions x, y, z, w; twist = velocity of the frame origin expressed in that frame; one consistent calibrated robot model |
 | D4 | Calibration files | ROS `camera_info` YAML per camera serial and resolution; extrinsics YAML with metadata; results written to `experiments/`, promoted to `ur3e_bringup/config/calibration/` by review |
 | D5 | Detection interface | `vision_msgs/Detection2DArray`; same output for classical, DL and ArUco methods; YOLO label format; split by session |
@@ -21,6 +21,7 @@ Agreed in planning on 26/11/2026 (Taher branch). They remain **proposals for the
 
 ## Corrections recorded on 26/11/2026
 
+- **D2 QoS (evidence-based change, to confirm):** best-effort subscriptions lost most RGB frames across processes on the development laptop (5.2 Hz received at 640×480, 0.8 Hz at 1280×720, instead of 30 Hz); reliable ones received all frames. Image consumers now default to reliable, keep last 5. Evidence: `experiments/camera/2026-11-26_image_qos_probe/`.
 - Hybrid visual servoing is a mandatory requirement; it is never cut. Optional AI and robot-learning work is deferred first.
 - Mechanical feasibility and fixed-bottle opening experiments start early, in parallel with the common foundation.
 - Numerical acceptance thresholds are **preliminary engineering targets** until experimental evidence supports them.
