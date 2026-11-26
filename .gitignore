@@ -51,3 +51,9 @@ datasets/
 .idea/
 *.swp
 .DS_Store
+
+# Web dashboard (web/)
+web/node_modules/
+web/dist/
+web/src/generated/
+web/public/repo/

@@ -107,6 +107,8 @@ Raw data (images, bags) stays outside Git; `config.yaml` records where it is.
 
 [`progress.yaml`](../progress.yaml) is the single source of truth for work packages, milestones, open questions and validation status. The dashboard reads it.
 
+**Maintainer:** only Mohamed Taher GUERBEJ edits `progress.yaml` (statuses, evidence, next step, milestones) and the dashboard data. Other members send their results and status updates to the maintainer (message, issue or pull request comment); they do not edit the file themselves.
+
 - A work package is `done` only when its deliverables meet their acceptance targets and evidence is linked.
 - Validation is tracked separately for implementation, offline, simulation and hardware.
 - Acceptance numbers are preliminary until experimental evidence supports them; changes are explained in the experiment notes.

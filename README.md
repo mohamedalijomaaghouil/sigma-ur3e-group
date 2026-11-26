@@ -56,6 +56,7 @@ docs/          architecture, conventions, roadmap, workflow, setup
 dl/            dataset scripts and training (no data, no weights)
 reports/       one LaTeX report per graded step
 data/          ignored by Git: datasets, bags, videos (shared Drive)
+web/           project dashboard (React + TypeScript + Vite)
 progress.yaml  single source of truth for project progress
 ```
 
@@ -77,6 +78,14 @@ source install/setup.bash
 ```
 
 Details: [docs/SETUP.md](docs/SETUP.md).
+
+### Project dashboard
+
+```bash
+cd web && npm install && npm run dev   # http://127.0.0.1:5173
+```
+
+Overview, interactive architecture, roadmap, progress and validation, team, results, documentation and Git activity, generated from the repository files. See [web/README.md](web/README.md).
 
 ## Team
 

@@ -12,6 +12,16 @@
 schema_version: 1
 updated: 2026-11-26
 
+# Only the progress maintainer edits this file (progress, next step, statuses, evidence).
+# Other members propose changes to them instead of editing it.
+maintainer: Mohamed Taher GUERBEJ
+
+# The next concrete step, shown on the dashboard. Update it whenever the focus changes.
+next_step:
+  title: Start WP2 camera acquisition (software side)
+  work_package: WP2
+  detail: "Camera launch file, ur3e_camera package (stream_check, dataset_recorder) with unit tests. Hardware validation waits for the RealSense model and profiles (Q2)."
+
 project:
   name: sigma-ur3e-group
   title: Vision-based assistive bottle opening with a UR3e
@@ -141,18 +151,18 @@ interfaces:
 decisions:
   - {id: D1, title: Repository and package architecture, status: agreed_in_planning}
   - {id: D2, title: Camera acquisition interface, status: agreed_in_planning}
-  - {id: D3, title: Frames, conventions and units, status: agreed_in_planning}
+  - {id: D3, title: "Frames, conventions and units", status: agreed_in_planning}
   - {id: D4, title: Calibration files and distribution, status: agreed_in_planning}
   - {id: D5, title: Shared detection interface, status: agreed_in_planning}
   - {id: D6, title: IBVS and PBVS interfaces, status: agreed_in_planning}
   - {id: D7, title: Velocity control interface, status: agreed_in_planning}
   - {id: D8, title: MoveIt and MoveIt Servo integration, status: agreed_in_planning}
   - {id: D9, title: Gripper and manipulation interface, status: agreed_in_planning}
-  - {id: D10, title: Simulation, datasets and experiment protocols, status: agreed_in_planning}
+  - {id: D10, title: "Simulation, datasets and experiment protocols", status: agreed_in_planning}
   - {id: D11, title: Team coordination and maintainers, status: agreed_in_planning}
   - {id: D12, title: GitHub workflow and progress tracking, status: agreed_in_planning}
-  - {id: D13, title: Web dashboard (React, TypeScript, Vite), status: agreed_in_planning}
-  - {id: D14, title: Roadmap, deliverables and acceptance targets, status: agreed_in_planning}
+  - {id: D13, title: "Web dashboard (React, TypeScript, Vite)", status: agreed_in_planning}
+  - {id: D14, title: "Roadmap, deliverables and acceptance targets", status: agreed_in_planning}
 decisions_note: Agreed in planning on 26/11/2026; group confirmation pending.
 
 requirements:
@@ -169,7 +179,7 @@ requirements:
     title: Calibration
     items:
       - {text: Hand-eye calibration, work_packages: [WP6]}
-      - {text: Robot, camera and end-effector transformations validated, work_packages: [WP6]}
+      - {text: "Robot, camera and end-effector transformations validated", work_packages: [WP6]}
       - {text: Gripper TCP calibration, work_packages: [WP6]}
     report: not_started
   - id: S3
@@ -194,10 +204,84 @@ requirements:
       - {text: Assistive bottle opening using steps 1–4, work_packages: [WP15, WP16]}
     report: not_started
 
+phases:
+  - {id: P0, title: Baseline, start: 2026-11-26, end: 2026-11-29, goal: "Documentation, conventions, progress tracking, dashboard MVP"}
+  - {id: P1, title: Common foundation, start: 2026-11-30, end: 2026-12-18, goal: "Camera, intrinsics, robot model, joint and Cartesian control, hand-eye and TCP, mechanical feasibility"}
+  - {id: H, title: Holidays (offline work), start: 2026-12-19, end: 2027-01-03, goal: "Kinematic simulator, IBVS/PBVS in simulation, detection dataset, offline pose estimation"}
+  - {id: P2, title: Parallel servoing, start: 2027-01-04, end: 2027-01-22, goal: "IBVS and PBVS on a fixed bottle; hybrid in simulation; MoveIt pre-grasp"}
+  - {id: P3, title: Integration, start: 2027-01-23, end: 2027-02-09, goal: "Hybrid on the robot, grasp and unscrew, comparisons, reports, demo"}
+
+# Planned comparisons per subsystem (methods only; results live in experiments/).
+subsystems:
+  - id: intrinsic_calibration
+    name: Intrinsic camera calibration
+    work_packages: [WP3]
+    primary: ChArUco target + OpenCV calibrateCamera
+    alternatives: [Chessboard target, Own Zhang solver (optional)]
+    references: [ROS camera_calibration, RealSense factory intrinsics]
+    validation: Held-out images and repeatability across sessions
+    metrics: [RMS reprojection error on fit images (px), RMS on held-out images (px), Parameter spread across sessions (%)]
+  - id: hand_eye
+    name: Hand-eye calibration
+    work_packages: [WP6]
+    primary: OpenCV calibrateHandEye (method chosen from results)
+    alternatives: [Tsai–Lenz, Park–Martin, Horaud, Andreff, Daniilidis]
+    references: [easy_handeye2]
+    validation: Independent robot poses
+    metrics: [Translation consistency (mm), Rotation consistency (deg)]
+  - id: kinematics
+    name: Forward kinematics and Jacobian
+    work_packages: [WP4, WP5]
+    primary: Own FK and Jacobian from the calibrated UR3e kinematics
+    alternatives: []
+    references: [TF from robot_state_publisher, Finite differences]
+    validation: Measured TCP motion
+    metrics: [FK position error (mm), FK orientation error (deg), Jacobian relative error]
+  - id: cartesian_control
+    name: Cartesian velocity control
+    work_packages: [WP5]
+    primary: Own damped least-squares controller
+    alternatives: []
+    references: [MoveIt Servo]
+    validation: Tracking error on mock hardware, URSim and the robot
+    metrics: [Twist tracking error, Joint velocity saturation events, Stop time after timeout]
+  - id: detection
+    name: Object detection
+    work_packages: [WP8]
+    primary: Fine-tuned YOLO
+    alternatives: [HSV + contours + ellipse fit]
+    references: [COCO-pretrained YOLO]
+    validation: ArUco ground truth and a labelled held-out session
+    metrics: [Precision, Recall, Centre error (px), Latency (ms)]
+  - id: pose_estimation
+    name: Cap pose estimation
+    work_packages: [WP11]
+    primary: Chosen from results
+    alternatives: [Ellipse geometry, DL keypoints + geometry, Structure from Motion]
+    references: [ArUco PnP]
+    validation: Ground truth (ArUco; depth only if allowed)
+    metrics: [Position error (mm), Axis error (deg)]
+  - id: visual_servoing
+    name: Visual servoing
+    work_packages: [WP10, WP12, WP13, WP16]
+    primary: IBVS, PBVS and hybrid (all mandatory)
+    alternatives: []
+    references: [ViSP (optional)]
+    validation: Same initial conditions and target motions for every controller
+    metrics: [Convergence time (s), Final error, Trajectory smoothness, Robustness to target motion]
+  - id: manipulation
+    name: Grasp and unscrew
+    work_packages: [WP7, WP15]
+    primary: To be defined after feasibility measurements
+    alternatives: [Continuous rotation, Release–regrasp cycles]
+    references: []
+    validation: Trials on a fixed bottle
+    metrics: [Grasp success rate, Opening success rate, Execution time]
+
 milestones:
   - {id: M0, title: Planning baseline, date: 2026-11-27, work_packages: [WP0, WP1], description: "Docs, progress.yaml, dashboard MVP"}
   - {id: M1, title: Camera and robot foundations, date: 2026-12-11, work_packages: [WP2, WP3, WP4], description: "Camera and intrinsics validated on hardware; robot model and joint velocity on mock hardware/URSim"}
-  - {id: M2, title: Control, hand-eye and feasibility, date: 2026-12-18, work_packages: [WP5, WP6, WP7], description: "Cartesian control in simulation; hand-eye and TCP if the mount is known; can the gripper open our bottles?"}
+  - {id: M2, title: "Control, hand-eye and feasibility", date: 2026-12-18, work_packages: [WP5, WP6, WP7], description: "Cartesian control in simulation; hand-eye and TCP if the mount is known; can the gripper open our bottles?"}
   - {id: M3, title: Servoing in simulation, date: 2027-01-08, work_packages: [WP8, WP9, WP10, WP11, WP12], description: "Detection v1; IBVS and PBVS in the kinematic simulator; offline pose estimation v1"}
   - {id: M4, title: Servoing on the robot, date: 2027-01-22, work_packages: [WP10, WP12, WP13, WP14], description: "IBVS and PBVS on a fixed bottle; hybrid in simulation; MoveIt pre-grasp"}
   - {id: M5, title: Integration, date: 2027-01-31, work_packages: [WP13, WP15, WP16], description: "Hybrid on the robot; grasp and unscrew on a fixed bottle; comparison experiments"}
@@ -230,7 +314,7 @@ work_packages:
     block: common
     phase: 0
     milestone: M0
-    status: planned
+    status: in_review
     depends_on: [WP0]
     blocked_by: []
     packages: []
@@ -238,8 +322,10 @@ work_packages:
     description: React + TypeScript + Vite dashboard in web/, reading progress.yaml, experiments and docs.
     deliverables:
       - {name: Dashboard in web/, acceptance: Builds and runs locally; all content comes from repository files}
-    validation: {implementation: not_started, offline: not_applicable, simulation: not_applicable, hardware: not_applicable}
-    evidence: []
+    validation: {implementation: done, offline: not_applicable, simulation: not_applicable, hardware: not_applicable}
+    evidence:
+      - {label: Dashboard source, path: web/}
+      - {label: Dashboard README, path: web/README.md}
 
   - id: WP2
     title: Camera acquisition
@@ -253,9 +339,9 @@ work_packages:
     graded_steps: [S1]
     description: RGB-only RealSense launch with a configurable profile, stream_check and dataset_recorder.
     deliverables:
-      - {name: Camera launch file (RGB only, profile parameter), acceptance: "Depth disabled; frame_id = camera_color_optical_frame", preliminary: true}
+      - {name: "Camera launch file (RGB only, profile parameter)", acceptance: "Depth disabled; frame_id = camera_color_optical_frame", preliminary: true}
       - {name: stream_check node, acceptance: "≥ 29 Hz over 5 min at the chosen 30 Hz profile; image size equals camera_info size", preliminary: true}
-      - {name: dataset_recorder node, acceptance: Dataset folder with images, camera_info, frames.csv and manifest.yaml}
+      - {name: dataset_recorder node, acceptance: "Dataset folder with images, camera_info, frames.csv and manifest.yaml"}
     validation: {implementation: not_started, offline: not_started, simulation: not_applicable, hardware: not_started}
     evidence: []
 
@@ -292,7 +378,7 @@ work_packages:
     graded_steps: [S1]
     description: UR driver bringup, extraction of the robot's kinematic calibration, joint velocity test on mock hardware/URSim then the robot.
     deliverables:
-      - {name: Extracted kinematics used by driver, URDF and our code, acceptance: Single file loaded everywhere}
+      - {name: "Extracted kinematics used by driver, URDF and our code", acceptance: Single file loaded everywhere}
       - {name: Joint velocity test node, acceptance: "Commanded vs measured velocity consistent; timeout stops the robot", preliminary: true}
     validation: {implementation: not_started, offline: not_applicable, simulation: not_started, hardware: not_started}
     evidence: []
@@ -395,7 +481,7 @@ work_packages:
     graded_steps: [S4]
     description: Feature selection (observability, rank of the interaction matrix), depth approximation, control law, static then moving target.
     deliverables:
-      - {name: IBVS node on /ibvs/cmd_vel, acceptance: Converges in simulation, then on a fixed bottle}
+      - {name: IBVS node on /ibvs/cmd_vel, acceptance: "Converges in simulation, then on a fixed bottle"}
     validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
     evidence: []
 
@@ -428,7 +514,7 @@ work_packages:
     graded_steps: [S4]
     description: Desired relative pose from grasp.yaml, translation and θu errors, PBVS law, static then moving target.
     deliverables:
-      - {name: PBVS node on /pbvs/cmd_vel, acceptance: Converges in simulation, then on a fixed bottle}
+      - {name: PBVS node on /pbvs/cmd_vel, acceptance: "Converges in simulation, then on a fixed bottle"}
     validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
     evidence: []
 
@@ -444,7 +530,7 @@ work_packages:
     graded_steps: [S4]
     description: 2.5D or other justified hybrid law built on the IBVS and PBVS cores; never cut from the plan.
     deliverables:
-      - {name: Hybrid node on /hybrid/cmd_vel, acceptance: Converges in simulation, then on a fixed bottle}
+      - {name: Hybrid node on /hybrid/cmd_vel, acceptance: "Converges in simulation, then on a fixed bottle"}
     validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
     evidence: []
 

@@ -1,0 +1,30 @@
+{
+  "name": "ur3e-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Project dashboard for the UR3e assistive bottle-opening project",
+  "scripts": {
+    "sync": "node scripts/sync-data.mjs",
+    "predev": "npm run sync",
+    "dev": "vite",
+    "prebuild": "npm run sync",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "marked": "^18.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.11",
+    "@types/react": "^19.3.3",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "yaml": "^2.9.1"
+  }
+}

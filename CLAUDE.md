@@ -32,6 +32,7 @@ Read before working: [docs/architecture.md](docs/architecture.md), [docs/convent
 - Each subsystem: primary implementation, purposeful alternatives, external references, independent validation. Select the final method from results.
 - Never invent results, progress, hardware details or calibration values. Mark unknowns as unknown.
 - Track implementation separately from offline, simulation and hardware validation in `progress.yaml`, with evidence.
+- `progress.yaml` (including `next_step`) and the dashboard data are maintained only by Mohamed Taher GUERBEJ. Change them only at the maintainer's request.
 - Acceptance numbers are preliminary until experiments support them.
 - Experiments: `experiments/<subsystem>/<YYYY-MM-DD>_<name>/` with `config.yaml`, `metrics.json`, `plots/`, `notes.md`.
 
