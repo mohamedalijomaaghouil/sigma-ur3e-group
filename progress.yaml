@@ -1,0 +1,525 @@
+# Single source of truth for project progress.
+# Read by the dashboard (web/). Edit by hand, commit with the work it describes.
+#
+# Rules
+# - Never mark progress without evidence (a test, an experiment folder, a commit or a document).
+# - Validation is tracked per level: implementation, offline, simulation, hardware.
+#     implementation: not_started | in_progress | done
+#     offline / simulation / hardware: not_started | in_progress | passed | failed | not_applicable
+# - Work package status: planned | in_progress | in_review | blocked | done | deferred
+# - Acceptance numbers are preliminary engineering targets until evidence supports them.
+
+schema_version: 1
+updated: 2026-11-26
+
+project:
+  name: sigma-ur3e-group
+  title: Vision-based assistive bottle opening with a UR3e
+  short_title: UR3e Assistive Bottle Opening
+  institution: SIGMA Clermont — Sensors and Robotic Applications (Project-3A)
+  summary: >-
+    A person who can use only one hand holds a water bottle. A UR3e with an RGB camera detects the
+    bottle and its cap, approaches it with visual servoing (IBVS, PBVS and hybrid), grasps the cap,
+    unscrews it, detects that it is free and lifts it about 3 cm.
+  use_case_steps:
+    - Detect the bottle and its cap
+    - Estimate visual features and/or the 3D cap pose
+    - Approach the cap
+    - Follow bottle motion with visual servoing
+    - Grasp the cap
+    - Unscrew it
+    - Detect cap release
+    - Lift the cap about 3 cm
+  development_levels:
+    - id: L1
+      name: Bottle in a fixture
+      status: planned
+    - id: L2
+      name: Bottle moved by hand between and during trials
+      status: planned
+    - id: L3
+      name: Person holds the bottle
+      status: planned
+      note: Only after validation, a risk assessment and approval from the professors
+  hardware:
+    - item: Universal Robots UR3e (6 DoF)
+      status: confirmed
+    - item: Intel RealSense camera, RGB only for perception
+      status: model to confirm
+    - item: OnRobot gripper
+      status: model to confirm
+    - item: UR3e built-in force/torque sensing
+      status: ROS 2 access to verify
+  software:
+    ros_distro: humble
+    ros_distro_note: Verified on the development laptop (Ubuntu 22.04); lab PCs to confirm
+    stack: [ROS 2 Humble, ur_robot_driver, ros2_control, MoveIt 2, MoveIt Servo, OpenCV, PyTorch, NumPy, SciPy]
+  demo:
+    date: 2027-02-09
+    status: to_confirm
+    note: From the updated Project-3A brief of 06/10/2026; reconfirm with the professors
+  repository:
+    url: https://github.com/mohamedalijomaaghouil/sigma-ur3e-group
+    working_branch: Taher
+    main_branch: main
+
+team:
+  note: Package maintainers and responsibilities are assigned after the architecture is agreed by the group (D11).
+  members:
+    - name: Kamil BENMADI
+      responsibilities: []
+    - name: Mohamed Ali JOMAA GHOUIL
+      responsibilities: []
+    - name: Kevin PALAIO CORREIA
+      responsibilities: []
+    - name: Mohamed Taher GUERBEJ
+      responsibilities: []
+    - name: Dina MOUTIH
+      responsibilities: []
+  groups:
+    - id: upstream
+      name: Common upstream
+      members: []
+    - id: group_a
+      name: Group A — IBVS
+      members: []
+    - id: group_b
+      name: Group B — PBVS
+      members: []
+    - id: downstream
+      name: Common downstream
+      members: []
+
+blocks:
+  - id: upstream
+    name: Common upstream
+    description: Camera acquisition, calibration and shared detection
+  - id: parallel
+    name: Parallel visual servoing
+    description: Group A (IBVS) and Group B (pose estimation, PBVS); hybrid developed jointly
+  - id: downstream
+    name: Common downstream
+    description: Controller selection, Cartesian control, MoveIt, ros2_control, grasp and unscrew
+  - id: common
+    name: Common infrastructure
+    description: Shared maths, simulation, bringup, documentation and dashboard
+  - id: optional
+    name: Optional extensions
+    description: Robot learning and other AI extensions, deferred until the graded core is validated
+
+packages:
+  - {name: ur3e_bringup, block: common, phase: 1, status: planned, maintainer: null, purpose: "Launch files, system configuration, promoted calibration files"}
+  - {name: ur3e_description, block: common, phase: 1, status: planned, maintainer: null, purpose: "Project cell xacro on top of the official UR description (gripper, camera, mount, TCP)"}
+  - {name: ur3e_moveit_config, block: downstream, phase: 2, status: planned, maintainer: null, purpose: "SRDF, kinematics and Servo configuration for our cell"}
+  - {name: ur3e_camera, block: upstream, phase: 1, status: planned, maintainer: null, purpose: "Stream check, dataset recorder, calibrated camera_info relay"}
+  - {name: ur3e_calibration, block: upstream, phase: 1, status: planned, maintainer: null, purpose: "Intrinsic, hand-eye and TCP calibration"}
+  - {name: ur3e_geometry, block: common, phase: 1, status: planned, maintainer: null, purpose: "Minimal shared maths: transforms, rotations, skew, adjoint, projection"}
+  - {name: ur3e_perception, block: upstream, phase: 1, status: planned, maintainer: null, purpose: "Shared detection (OpenCV and DL inference), ArUco reference, ellipse fitting"}
+  - {name: ur3e_pose_estimation, block: parallel, phase: 2, status: planned, maintainer: null, purpose: "Cap pose: ellipse geometry, DL keypoints, SfM (Group B)"}
+  - {name: ur3e_ibvs, block: parallel, phase: 2, status: planned, maintainer: null, purpose: "Visual features, interaction matrix, IBVS law (Group A)"}
+  - {name: ur3e_pbvs, block: parallel, phase: 2, status: planned, maintainer: null, purpose: "Pose error, PBVS law (Group B)"}
+  - {name: ur3e_hybrid, block: parallel, phase: 2, status: planned, maintainer: null, purpose: "Hybrid / 2.5D visual servoing (joint, mandatory)"}
+  - {name: ur3e_control, block: downstream, phase: 1, status: planned, maintainer: null, purpose: "Kinematics, Jacobian, DLS controller, limits, selector, controller switching"}
+  - {name: ur3e_manipulation, block: downstream, phase: 1, status: planned, maintainer: null, purpose: "Gripper client, grasp, unscrew, cap-release detection"}
+  - {name: ur3e_task_manager, block: downstream, phase: 3, status: planned, maintainer: null, purpose: "State machine for the whole task"}
+  - {name: ur3e_simulation, block: common, phase: 2, status: planned, maintainer: null, purpose: "Kinematic visual servoing simulator; Gazebo cell later"}
+  - {name: ur3e_learning, block: optional, phase: 3, status: deferred, maintainer: null, purpose: "Deployed learned controller on the twist interface"}
+  - {name: ur3e_interfaces, block: common, phase: null, status: deferred, maintainer: null, purpose: "Custom messages, only if standard ones are insufficient"}
+
+interfaces:
+  - {name: /camera/color/image_raw, type: sensor_msgs/Image, from: ur3e_camera, to: [ur3e_perception, ur3e_ibvs]}
+  - {name: /camera/color/camera_info, type: sensor_msgs/CameraInfo, from: ur3e_camera, to: [ur3e_perception, ur3e_ibvs, ur3e_pose_estimation]}
+  - {name: /perception/detections, type: vision_msgs/Detection2DArray, from: ur3e_perception, to: [ur3e_ibvs, ur3e_pose_estimation]}
+  - {name: /perception/cap_pose, type: geometry_msgs/PoseStamped, from: ur3e_pose_estimation, to: [ur3e_pbvs, ur3e_hybrid, ur3e_task_manager]}
+  - {name: /ibvs/cmd_vel, type: geometry_msgs/TwistStamped, from: ur3e_ibvs, to: [ur3e_control]}
+  - {name: /pbvs/cmd_vel, type: geometry_msgs/TwistStamped, from: ur3e_pbvs, to: [ur3e_control]}
+  - {name: /hybrid/cmd_vel, type: geometry_msgs/TwistStamped, from: ur3e_hybrid, to: [ur3e_control]}
+  - {name: /control/cmd_twist, type: geometry_msgs/TwistStamped, from: ur3e_control, to: [ur3e_control]}
+  - {name: /forward_velocity_controller/commands, type: std_msgs/Float64MultiArray, from: ur3e_control, to: [ur_robot_driver]}
+  - {name: gripper command, type: control_msgs/action/GripperCommand, from: ur3e_manipulation, to: [gripper driver]}
+
+decisions:
+  - {id: D1, title: Repository and package architecture, status: agreed_in_planning}
+  - {id: D2, title: Camera acquisition interface, status: agreed_in_planning}
+  - {id: D3, title: Frames, conventions and units, status: agreed_in_planning}
+  - {id: D4, title: Calibration files and distribution, status: agreed_in_planning}
+  - {id: D5, title: Shared detection interface, status: agreed_in_planning}
+  - {id: D6, title: IBVS and PBVS interfaces, status: agreed_in_planning}
+  - {id: D7, title: Velocity control interface, status: agreed_in_planning}
+  - {id: D8, title: MoveIt and MoveIt Servo integration, status: agreed_in_planning}
+  - {id: D9, title: Gripper and manipulation interface, status: agreed_in_planning}
+  - {id: D10, title: Simulation, datasets and experiment protocols, status: agreed_in_planning}
+  - {id: D11, title: Team coordination and maintainers, status: agreed_in_planning}
+  - {id: D12, title: GitHub workflow and progress tracking, status: agreed_in_planning}
+  - {id: D13, title: Web dashboard (React, TypeScript, Vite), status: agreed_in_planning}
+  - {id: D14, title: Roadmap, deliverables and acceptance targets, status: agreed_in_planning}
+decisions_note: Agreed in planning on 26/11/2026; group confirmation pending.
+
+requirements:
+  - id: S1
+    title: Image acquisition and robot control
+    items:
+      - {text: RGB image acquisition, work_packages: [WP2]}
+      - {text: Image processing with OpenCV and deep learning, work_packages: [WP8]}
+      - {text: Intrinsic calibration compared with RealSense factory data, work_packages: [WP3]}
+      - {text: Joint velocity control, work_packages: [WP4]}
+      - {text: Cartesian velocity control, work_packages: [WP5]}
+    report: not_started
+  - id: S2
+    title: Calibration
+    items:
+      - {text: Hand-eye calibration, work_packages: [WP6]}
+      - {text: Robot, camera and end-effector transformations validated, work_packages: [WP6]}
+      - {text: Gripper TCP calibration, work_packages: [WP6]}
+    report: not_started
+  - id: S3
+    title: Object detection and pose estimation
+    items:
+      - {text: ArUco detection and pose, work_packages: [WP8, WP11]}
+      - {text: Detection — classical vs deep learning, work_packages: [WP8]}
+      - {text: Pose — classical vs deep learning vs structure from motion, work_packages: [WP11]}
+    report: not_started
+  - id: S4
+    title: Robot motion control
+    items:
+      - {text: Open-loop motion with MoveIt, work_packages: [WP14]}
+      - {text: IBVS, work_packages: [WP10]}
+      - {text: PBVS, work_packages: [WP12]}
+      - {text: Hybrid visual servoing, work_packages: [WP13]}
+      - {text: Experimental comparison of the three, work_packages: [WP16]}
+    report: not_started
+  - id: S5
+    title: Application
+    items:
+      - {text: Assistive bottle opening using steps 1–4, work_packages: [WP15, WP16]}
+    report: not_started
+
+milestones:
+  - {id: M0, title: Planning baseline, date: 2026-11-27, work_packages: [WP0, WP1], description: "Docs, progress.yaml, dashboard MVP"}
+  - {id: M1, title: Camera and robot foundations, date: 2026-12-11, work_packages: [WP2, WP3, WP4], description: "Camera and intrinsics validated on hardware; robot model and joint velocity on mock hardware/URSim"}
+  - {id: M2, title: Control, hand-eye and feasibility, date: 2026-12-18, work_packages: [WP5, WP6, WP7], description: "Cartesian control in simulation; hand-eye and TCP if the mount is known; can the gripper open our bottles?"}
+  - {id: M3, title: Servoing in simulation, date: 2027-01-08, work_packages: [WP8, WP9, WP10, WP11, WP12], description: "Detection v1; IBVS and PBVS in the kinematic simulator; offline pose estimation v1"}
+  - {id: M4, title: Servoing on the robot, date: 2027-01-22, work_packages: [WP10, WP12, WP13, WP14], description: "IBVS and PBVS on a fixed bottle; hybrid in simulation; MoveIt pre-grasp"}
+  - {id: M5, title: Integration, date: 2027-01-31, work_packages: [WP13, WP15, WP16], description: "Hybrid on the robot; grasp and unscrew on a fixed bottle; comparison experiments"}
+  - {id: M6, title: Demo, date: 2027-02-09, work_packages: [WP16], description: "Final presentation and live demo (date to reconfirm)"}
+
+work_packages:
+  - id: WP0
+    title: Documentation and tracking baseline
+    block: common
+    phase: 0
+    milestone: M0
+    status: in_review
+    depends_on: []
+    blocked_by: []
+    packages: []
+    graded_steps: []
+    description: README, CLAUDE.md, architecture, conventions, decisions, roadmap, workflow, progress.yaml, experiments/ and media/ structure.
+    deliverables:
+      - {name: Project documentation in docs/, acceptance: Reviewed by the group}
+      - {name: progress.yaml, acceptance: Read by the dashboard without errors}
+    validation: {implementation: done, offline: not_applicable, simulation: not_applicable, hardware: not_applicable}
+    evidence:
+      - {label: Architecture, path: docs/architecture.md}
+      - {label: Conventions, path: docs/conventions.md}
+      - {label: Roadmap, path: docs/roadmap.md}
+      - {label: Workflow, path: docs/workflow.md}
+
+  - id: WP1
+    title: Web dashboard MVP
+    block: common
+    phase: 0
+    milestone: M0
+    status: planned
+    depends_on: [WP0]
+    blocked_by: []
+    packages: []
+    graded_steps: []
+    description: React + TypeScript + Vite dashboard in web/, reading progress.yaml, experiments and docs.
+    deliverables:
+      - {name: Dashboard in web/, acceptance: Builds and runs locally; all content comes from repository files}
+    validation: {implementation: not_started, offline: not_applicable, simulation: not_applicable, hardware: not_applicable}
+    evidence: []
+
+  - id: WP2
+    title: Camera acquisition
+    block: upstream
+    phase: 1
+    milestone: M1
+    status: planned
+    depends_on: []
+    blocked_by: [Q2]
+    packages: [ur3e_bringup, ur3e_camera]
+    graded_steps: [S1]
+    description: RGB-only RealSense launch with a configurable profile, stream_check and dataset_recorder.
+    deliverables:
+      - {name: Camera launch file (RGB only, profile parameter), acceptance: "Depth disabled; frame_id = camera_color_optical_frame", preliminary: true}
+      - {name: stream_check node, acceptance: "≥ 29 Hz over 5 min at the chosen 30 Hz profile; image size equals camera_info size", preliminary: true}
+      - {name: dataset_recorder node, acceptance: Dataset folder with images, camera_info, frames.csv and manifest.yaml}
+    validation: {implementation: not_started, offline: not_started, simulation: not_applicable, hardware: not_started}
+    evidence: []
+
+  - id: WP3
+    title: Intrinsic camera calibration
+    block: upstream
+    phase: 1
+    milestone: M1
+    status: planned
+    depends_on: [WP2]
+    blocked_by: [Q2]
+    packages: [ur3e_calibration, ur3e_camera]
+    graded_steps: [S1]
+    description: >-
+      ChArUco (primary candidate) and chessboard (alternative) targets with OpenCV calibrateCamera;
+      ROS camera_calibration and RealSense factory intrinsics as references; own Zhang solver optional.
+    deliverables:
+      - {name: Calibration library and tools in ur3e_calibration, acceptance: Synthetic tests recover K within 0.5 %, preliminary: true}
+      - {name: Promoted camera_info YAML, acceptance: "RMS < 0.5 px on fit and held-out images; fx, fy spread < 0.5 % over 3 sessions", preliminary: true}
+      - {name: Calibrated camera_info relay, acceptance: Refuses to start if the image size differs from the calibration}
+      - {name: Comparison with factory and ROS camera_calibration, acceptance: Reported in experiments/calibration/}
+    validation: {implementation: not_started, offline: not_started, simulation: not_applicable, hardware: not_started}
+    evidence: []
+
+  - id: WP4
+    title: Robot bringup, consistent robot model, joint velocity control
+    block: downstream
+    phase: 1
+    milestone: M1
+    status: planned
+    depends_on: []
+    blocked_by: [Q4]
+    packages: [ur3e_bringup, ur3e_control]
+    graded_steps: [S1]
+    description: UR driver bringup, extraction of the robot's kinematic calibration, joint velocity test on mock hardware/URSim then the robot.
+    deliverables:
+      - {name: Extracted kinematics used by driver, URDF and our code, acceptance: Single file loaded everywhere}
+      - {name: Joint velocity test node, acceptance: "Commanded vs measured velocity consistent; timeout stops the robot", preliminary: true}
+    validation: {implementation: not_started, offline: not_applicable, simulation: not_started, hardware: not_started}
+    evidence: []
+
+  - id: WP5
+    title: Cartesian velocity control
+    block: downstream
+    phase: 1
+    milestone: M2
+    status: planned
+    depends_on: [WP4]
+    blocked_by: [Q9]
+    packages: [ur3e_geometry, ur3e_control]
+    graded_steps: [S1]
+    description: >-
+      Forward kinematics and Jacobian from the calibrated model, damped least-squares inverse, limits,
+      timeout, twist selector. MoveIt Servo as reference after its twist convention is verified.
+    deliverables:
+      - {name: ur3e_geometry with unit tests, acceptance: Tests pass}
+      - {name: FK and Jacobian, acceptance: "FK vs TF < 0.1 mm and < 0.01°; Jacobian vs finite differences < 1e-6 relative", preliminary: true}
+      - {name: Cartesian controller and selector, acceptance: TCP follows a test twist on mock hardware/URSim}
+    validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
+    evidence: []
+
+  - id: WP6
+    title: Hand-eye and TCP calibration
+    block: upstream
+    phase: 1
+    milestone: M2
+    status: blocked
+    depends_on: [WP3, WP4]
+    blocked_by: [Q1, Q3]
+    packages: [ur3e_calibration, ur3e_bringup]
+    graded_steps: [S2]
+    description: Synchronised robot/target data collection, OpenCV calibrateHandEye with five methods, validation on independent poses, TCP calibration.
+    deliverables:
+      - {name: Promoted hand_eye.yaml and tcp.yaml, acceptance: Thresholds set from first data (mm and degrees on independent poses), preliminary: true}
+    validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
+    evidence: []
+
+  - id: WP7
+    title: Mechanical feasibility and fixed-bottle opening
+    block: downstream
+    phase: 1
+    milestone: M2
+    status: planned
+    depends_on: []
+    blocked_by: [Q3]
+    packages: [ur3e_manipulation]
+    graded_steps: [S5]
+    description: Cap diameter, opening torque, number of turns, thread pitch, gripper force and friction, wrist rotation limits, camera cable; first opening trials on a fixed bottle with taught poses.
+    deliverables:
+      - {name: Feasibility measurements, acceptance: Recorded in experiments/feasibility/}
+      - {name: First fixed-bottle opening trials, acceptance: Attempts and outcomes logged}
+    validation: {implementation: not_started, offline: not_applicable, simulation: not_applicable, hardware: not_started}
+    evidence: []
+
+  - id: WP8
+    title: Shared object detection
+    block: upstream
+    phase: 1
+    milestone: M3
+    status: planned
+    depends_on: [WP2, WP3]
+    blocked_by: []
+    packages: [ur3e_perception]
+    graded_steps: [S1, S3]
+    description: ArUco reference, classical detector (HSV, contours, ellipse fit), COCO-pretrained YOLO baseline, fine-tuned YOLO; dataset split by session with a held-out bottle model.
+    deliverables:
+      - {name: Detection node with interchangeable methods, acceptance: Same Detection2DArray output for every method}
+      - {name: Detection comparison, acceptance: "Precision, recall, centre error (px), latency on the held-out session"}
+    validation: {implementation: not_started, offline: not_started, simulation: not_applicable, hardware: not_started}
+    evidence: []
+
+  - id: WP9
+    title: Kinematic visual servoing simulator
+    block: common
+    phase: 2
+    milestone: M3
+    status: planned
+    depends_on: [WP5]
+    blocked_by: []
+    packages: [ur3e_simulation, ur3e_geometry]
+    graded_steps: [S4]
+    description: Pure-Python simulator (camera projection, kinematic robot, target motion) shared by IBVS, PBVS and hybrid.
+    deliverables:
+      - {name: Simulator with replayable target motions, acceptance: Same initial conditions reproducible for every controller}
+    validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_applicable}
+    evidence: []
+
+  - id: WP10
+    title: IBVS (Group A)
+    block: parallel
+    phase: 2
+    milestone: M4
+    status: planned
+    depends_on: [WP5, WP8, WP9]
+    blocked_by: [Q1]
+    packages: [ur3e_ibvs]
+    graded_steps: [S4]
+    description: Feature selection (observability, rank of the interaction matrix), depth approximation, control law, static then moving target.
+    deliverables:
+      - {name: IBVS node on /ibvs/cmd_vel, acceptance: Converges in simulation, then on a fixed bottle}
+    validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
+    evidence: []
+
+  - id: WP11
+    title: Cap pose estimation (Group B)
+    block: parallel
+    phase: 2
+    milestone: M3
+    status: planned
+    depends_on: [WP3, WP6, WP8]
+    blocked_by: []
+    packages: [ur3e_pose_estimation]
+    graded_steps: [S3]
+    description: Ellipse geometry, DL keypoints and SfM compared against ArUco ground truth.
+    deliverables:
+      - {name: Pose node on /perception/cap_pose, acceptance: Interchangeable methods with the same output}
+      - {name: Pose comparison, acceptance: "Position error (mm) and axis error (degrees) across viewpoints and bottle models"}
+    validation: {implementation: not_started, offline: not_started, simulation: not_applicable, hardware: not_started}
+    evidence: []
+
+  - id: WP12
+    title: PBVS (Group B)
+    block: parallel
+    phase: 2
+    milestone: M4
+    status: planned
+    depends_on: [WP5, WP9, WP11]
+    blocked_by: []
+    packages: [ur3e_pbvs]
+    graded_steps: [S4]
+    description: Desired relative pose from grasp.yaml, translation and θu errors, PBVS law, static then moving target.
+    deliverables:
+      - {name: PBVS node on /pbvs/cmd_vel, acceptance: Converges in simulation, then on a fixed bottle}
+    validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
+    evidence: []
+
+  - id: WP13
+    title: Hybrid visual servoing (mandatory)
+    block: parallel
+    phase: 2
+    milestone: M5
+    status: planned
+    depends_on: [WP10, WP12]
+    blocked_by: []
+    packages: [ur3e_hybrid]
+    graded_steps: [S4]
+    description: 2.5D or other justified hybrid law built on the IBVS and PBVS cores; never cut from the plan.
+    deliverables:
+      - {name: Hybrid node on /hybrid/cmd_vel, acceptance: Converges in simulation, then on a fixed bottle}
+    validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
+    evidence: []
+
+  - id: WP14
+    title: MoveIt open-loop positioning
+    block: downstream
+    phase: 2
+    milestone: M4
+    status: planned
+    depends_on: [WP4, WP6]
+    blocked_by: []
+    packages: [ur3e_moveit_config, ur3e_control]
+    graded_steps: [S4]
+    description: Home, observation and pre-grasp moves; controller switching between trajectory and velocity control.
+    deliverables:
+      - {name: Open-loop moves and controller switching, acceptance: Reaches pre-grasp from the estimated cap pose}
+    validation: {implementation: not_started, offline: not_applicable, simulation: not_started, hardware: not_started}
+    evidence: []
+
+  - id: WP15
+    title: Grasp and unscrew skill
+    block: downstream
+    phase: 3
+    milestone: M5
+    status: planned
+    depends_on: [WP5, WP7]
+    blocked_by: [Q3, Q7]
+    packages: [ur3e_manipulation]
+    graded_steps: [S5]
+    description: Pre-grasp alignment, gripper closing, rotation with thread following, force/torque monitoring, release detection, lift.
+    deliverables:
+      - {name: Unscrew skill on a fixed bottle, acceptance: Opening success rate reported per bottle model}
+    validation: {implementation: not_started, offline: not_applicable, simulation: not_applicable, hardware: not_started}
+    evidence: []
+
+  - id: WP16
+    title: Integration, comparison experiments, demo
+    block: common
+    phase: 3
+    milestone: M6
+    status: planned
+    depends_on: [WP13, WP14, WP15]
+    blocked_by: [Q8]
+    packages: [ur3e_task_manager]
+    graded_steps: [S4, S5]
+    description: Full task, IBVS vs PBVS vs hybrid under the same conditions, grasp and opening success rates, demo rehearsal.
+    deliverables:
+      - {name: Controller comparison, acceptance: "Convergence time, final error, smoothness, robustness to target motion"}
+      - {name: End-to-end demo, acceptance: Runs three times in a row at the approved level}
+    validation: {implementation: not_started, offline: not_applicable, simulation: not_started, hardware: not_started}
+    evidence: []
+
+  - id: WP17
+    title: Robot learning extensions (optional)
+    block: optional
+    phase: 3
+    milestone: null
+    status: deferred
+    depends_on: [WP9, WP13]
+    blocked_by: []
+    packages: [ur3e_learning]
+    graded_steps: []
+    description: For example behaviour cloning or residual RL on the twist interface; only after the graded core is validated.
+    deliverables: []
+    validation: {implementation: not_started, offline: not_started, simulation: not_started, hardware: not_started}
+    evidence: []
+
+open_questions:
+  - {id: Q1, question: "Camera mount: eye-in-hand or eye-to-hand?", blocks: [WP6, WP10], ask: group / professors, status: open}
+  - {id: Q2, question: "Exact RealSense model and available colour profiles", blocks: [WP2, WP3], ask: lab, status: open}
+  - {id: Q3, question: "Exact OnRobot gripper model, connection and ROS 2 Humble driver", blocks: [WP6, WP7, WP15], ask: lab / professors, status: open}
+  - {id: Q4, question: "ROS 2 distribution on the lab PCs and External Control URCap on the robot", blocks: [WP4], ask: lab, status: open}
+  - {id: Q5, question: "Demo date and lab access (including holidays)", blocks: [], ask: professors, status: open}
+  - {id: Q6, question: "Can RealSense depth be used as ground truth only?", blocks: [WP11], ask: professors, status: open}
+  - {id: Q7, question: "Is the UR3e force/torque reading available in ROS 2 and is force mode allowed?", blocks: [WP15], ask: professors, status: open}
+  - {id: Q8, question: "Is a person-held bottle allowed in the demo, and under which safeguards?", blocks: [WP16], ask: professors, status: open}
+  - {id: Q9, question: "Exact twist convention of MoveIt Servo (Humble 2.5.x) and of the UR driver frames", blocks: [WP5], ask: technical check, status: open}
+

@@ -1,0 +1,21 @@
+# Copy experiments/_template/ to experiments/<subsystem>/<YYYY-MM-DD>_<name>/ and fill in.
+subsystem: ""            # e.g. intrinsic_calibration
+experiment_id: ""        # same as the folder name
+title: ""
+date: ""                 # YYYY-MM-DD
+operators: []
+git_commit: ""           # commit of the code used
+validation_level: ""     # offline | simulation | hardware
+hardware:
+  camera: ""             # model and serial
+  profile: ""            # e.g. <width>x<height>@<fps>
+  robot: UR3e
+  gripper: ""
+dataset:
+  id: ""
+  location: ""           # path on the shared Drive (raw data is not in Git)
+methods:
+  - name: ""
+    role: primary        # primary | alternative | reference | validation
+    parameters: {}
+protocol: ""             # short description or link to the protocol

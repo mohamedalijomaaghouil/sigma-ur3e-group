@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "subsystem": "",
+  "experiment_id": "",
+  "title": "",
+  "date": "",
+  "git_commit": "",
+  "validation_level": "",
+  "dataset": "",
+  "methods": [
+    {"name": "", "role": "primary", "metrics": {}}
+  ],
+  "selected_method": null,
+  "conclusion": "",
+  "limitations": []
+}
