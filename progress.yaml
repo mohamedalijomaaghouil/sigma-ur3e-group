@@ -326,6 +326,8 @@ work_packages:
     evidence:
       - {label: Dashboard source, path: web/}
       - {label: Dashboard README, path: web/README.md}
+      - {label: Pages deploy workflow, path: .github/workflows/dashboard-pages.yml}
+      - {label: Published dashboard, url: "https://mohamedalijomaaghouil.github.io/sigma-ur3e-group/"}
 
   - id: WP2
     title: Camera acquisition
