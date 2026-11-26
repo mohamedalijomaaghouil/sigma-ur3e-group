@@ -1,5 +1,7 @@
 # Vision-based pick-and-place on UR3e
 
+> **Project dashboard:** **[mohamedalijomaaghouil.github.io/sigma-ur3e-group](https://mohamedalijomaaghouil.github.io/sigma-ur3e-group/)** — architecture, roadmap, progress, IBVS/PBVS plans, results and documentation (built from the `Taher` branch).
+
 SIGMA S9 semester project: a UR3e (ROS2) with an Intel RealSense (RGB only) detects an object,
 estimates its pose and grasps it using visual servoing.
 
