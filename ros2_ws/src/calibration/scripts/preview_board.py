@@ -5,6 +5,7 @@
 
 Green text = good start pose for handeye_auto.py: board centred, distance 30-40 cm, tilt < 10 deg.
 """
+import os
 import threading
 import time
 
@@ -18,7 +19,7 @@ from handeye_collect import Camera
 
 
 def main():
-    cal = yaml.safe_load(open("data/calib_images/calibration_result.yaml"))
+    cal = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "calib_images", "calibration_result.yaml")))
     K, D = np.array(cal["K"]), np.array(cal["D"])
     pattern = (9, 6)
     objp = np.zeros((54, 3), np.float32)
