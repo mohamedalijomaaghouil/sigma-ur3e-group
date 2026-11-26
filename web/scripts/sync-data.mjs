@@ -55,11 +55,29 @@ function readExperiments() {
   return { experiments, errors }
 }
 
+function readEvidence() {
+  const dir = join(root, 'media', 'evidence')
+  const items = []
+  const errors = []
+  if (!existsSync(dir)) return { items, errors }
+  for (const f of readdirSync(dir)) {
+    if (f.startsWith('_') || !/\.ya?ml$/.test(f)) continue
+    try {
+      const e = YAML.parse(readFileSync(join(dir, f), 'utf8')) ?? {}
+      items.push({ ...e, record: `media/evidence/${f}`, date: e.date ? String(e.date) : '' })
+    } catch (err) {
+      errors.push({ folder: `media/evidence/${f}`, error: String(err) })
+    }
+  }
+  items.sort((a, b) => String(b.date).localeCompare(String(a.date)))
+  return { items, errors }
+}
+
 function readDocs() {
   const docs = []
   const readme = join(root, 'README.md')
   if (existsSync(readme)) docs.push({ slug: 'readme', path: 'README.md', content: readFileSync(readme, 'utf8') })
-  const order = ['architecture', 'conventions', 'decisions', 'roadmap', 'workflow', 'SETUP', 'PLAN']
+  const order = ['architecture', 'conventions', 'decisions', 'roadmap', 'IBVS', 'PBVS', 'VISUAL_SERVOING_BENCHMARK', 'workflow', 'SETUP', 'PLAN']
   const docsDir = join(root, 'docs')
   if (existsSync(docsDir)) {
     const files = readdirSync(docsDir).filter((f) => f.endsWith('.md'))
@@ -133,11 +151,13 @@ if (suspicious.length) {
   process.exit(1)
 }
 const { experiments, errors } = readExperiments()
+const evidence = readEvidence()
 const data = {
   generatedAt: new Date().toISOString(),
   progress,
   experiments,
-  experimentErrors: errors,
+  experimentErrors: [...errors, ...evidence.errors],
+  evidence: evidence.items,
   docs: readDocs(),
   git: readGit(),
 }
@@ -145,8 +165,10 @@ const data = {
 // Copy experiment plots so the dashboard can display them (public/repo/ is generated, not committed).
 const publicRepo = join(here, '..', 'public', 'repo')
 rmSync(publicRepo, { recursive: true, force: true })
-for (const e of experiments) {
-  for (const plot of e.plots) {
+const toCopy = [...experiments.flatMap((e) => e.plots), ...evidence.items.filter((e) => e.status === 'approved' && e.file).map((e) => e.file)]
+{
+  for (const plot of toCopy) {
+    if (!existsSync(join(root, plot))) continue
     const dest = join(publicRepo, plot)
     mkdirSync(dirname(dest), { recursive: true })
     copyFileSync(join(root, plot), dest)
@@ -157,5 +179,5 @@ mkdirSync(dirname(outFile), { recursive: true })
 writeFileSync(outFile, JSON.stringify(data, null, 2))
 console.log(
   `sync-data: ${progress.work_packages?.length ?? 0} work packages, ${experiments.length} experiments, ` +
-    `${data.docs.length} docs, ${data.git.commits.length} commits -> ${relative(root, outFile)}`,
+    `${data.docs.length} docs, ${evidence.items.length} evidence records, ${data.git.commits.length} commits -> ${relative(root, outFile)}`,
 )

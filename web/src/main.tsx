@@ -4,12 +4,16 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import Activity from './pages/Activity'
 import Architecture from './pages/Architecture'
+import Comparison from './pages/Comparison'
+import Evidence from './pages/Evidence'
+import VsGroupPage from './pages/VsGroupPage'
 import Docs from './pages/Docs'
 import Overview from './pages/Overview'
 import Progress from './pages/Progress'
 import Results from './pages/Results'
 import Roadmap from './pages/Roadmap'
 import Team from './pages/Team'
+import 'katex/dist/katex.min.css'
 import './styles.css'
 
 // Apply the saved theme before the first paint.
@@ -26,6 +30,10 @@ createRoot(document.getElementById('root')!).render(
           <Route path="roadmap" element={<Roadmap />} />
           <Route path="progress" element={<Progress />} />
           <Route path="team" element={<Team />} />
+          <Route path="ibvs" element={<VsGroupPage key="ibvs" group="ibvs" />} />
+          <Route path="pbvs" element={<VsGroupPage key="pbvs" group="pbvs" />} />
+          <Route path="comparison" element={<Comparison />} />
+          <Route path="evidence" element={<Evidence />} />
           <Route path="results" element={<Results />} />
           <Route path="docs" element={<Docs />} />
           <Route path="docs/:slug" element={<Docs />} />

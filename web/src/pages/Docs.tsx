@@ -1,3 +1,4 @@
+import katex from 'katex'
 import { Marked, type Tokens } from 'marked'
 import { useEffect, useMemo, useRef } from 'react'
 import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -38,6 +39,9 @@ function makeRenderer(currentPath: string) {
         return `<h${depth} id="${id}">${this.parser.parseInline(tokens)}</h${depth}>`
       },
       code({ text, lang }: Tokens.Code) {
+        if (lang === 'math') {
+          return `<div class="math-block">${katex.renderToString(text, { displayMode: true, throwOnError: false })}</div>`
+        }
         const cls = lang === 'mermaid' ? ' class="mermaid-src"' : ''
         const label = lang === 'mermaid' ? '<div class="tiny muted" style="margin:-4px 0 6px">Mermaid diagram (rendered on GitHub)</div>' : ''
         return `${label}<pre${cls}><code>${escapeHtml(text)}</code></pre>`

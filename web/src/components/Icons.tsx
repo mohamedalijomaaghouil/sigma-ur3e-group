@@ -56,6 +56,19 @@ export const IconExternal = (p: P) => (
   <svg {...base(p)}><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
 )
 
+export const IconTarget = (p: P) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>
+)
+export const IconCube = (p: P) => (
+  <svg {...base(p)}><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" /></svg>
+)
+export const IconCompare = (p: P) => (
+  <svg {...base(p)}><path d="M4 20V8M10 20V4M16 20v-9M22 20H2" /><path d="M3 6l6-3 6 5 6-4" /></svg>
+)
+export const IconCamera = (p: P) => (
+  <svg {...base(p)}><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" /><circle cx="12" cy="13.5" r="3.5" /></svg>
+)
+
 /** Project mark: a stylised two-link arm reaching a cap. */
 export const BrandMark = (p: P) => (
   <svg viewBox="0 0 36 36" {...p}>

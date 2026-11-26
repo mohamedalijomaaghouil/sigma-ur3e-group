@@ -430,3 +430,25 @@ a.chip:hover { border-color: var(--accent); color: var(--accent); text-decoratio
   border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter: blur(4px);
 }
+
+/* ---------- Visual servoing groups ---------- */
+.levels { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.level { position: relative; display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); flex: 1 1 180px; }
+.level-id { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 13px; }
+.level-arrow { position: absolute; right: -9px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 12px; z-index: 1; }
+.week { display: grid; grid-template-columns: 34px 52px minmax(0, 1fr); gap: 8px; align-items: baseline; padding: 6px 8px; border-radius: 6px; }
+.week.current { background: var(--accent-soft); outline: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+
+/* ---------- Evidence gallery ---------- */
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.ev-card { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-2); display: grid; grid-template-rows: 150px auto; }
+.ev-media { display: grid; place-items: center; background: var(--surface-3); overflow: hidden; }
+.ev-media img { width: 100%; height: 150px; object-fit: cover; display: block; }
+.ev-link { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
+.ev-link svg { width: 16px; height: 16px; }
+.ev-body { padding: 10px 12px; display: grid; gap: 6px; }
+select.btn { appearance: auto; }
+
+/* ---------- Math (KaTeX) ---------- */
+.md .math-block { overflow-x: auto; padding: 6px 0; }
+.md .katex { font-size: 1.05em; }

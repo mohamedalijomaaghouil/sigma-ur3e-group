@@ -36,14 +36,14 @@ export const LEVELS: { key: ValidationLevel; label: string; short: string }[] = 
 ]
 
 /** Normalise implementation status to the check vocabulary for display. */
-export function levelStatus(wp: WorkPackage, level: ValidationLevel): CheckStatus {
+export function levelStatus(wp: Pick<WorkPackage, 'validation'>, level: ValidationLevel): CheckStatus {
   const v = wp.validation[level]
   if (level === 'implementation') return v === 'done' ? 'passed' : (v as CheckStatus)
   return v as CheckStatus
 }
 
 /** Counts of checkpoints over all work packages (not_applicable excluded). */
-export function checkpointStats(wps: WorkPackage[]) {
+export function checkpointStats(wps: Pick<WorkPackage, 'validation'>[]) {
   let applicable = 0
   let passed = 0
   let failed = 0
@@ -61,7 +61,7 @@ export function checkpointStats(wps: WorkPackage[]) {
   return { applicable, passed, failed, inProgress }
 }
 
-export function levelStats(wps: WorkPackage[], level: ValidationLevel) {
+export function levelStats(wps: Pick<WorkPackage, 'validation'>[], level: ValidationLevel) {
   let applicable = 0
   let passed = 0
   for (const wp of wps) {
@@ -131,4 +131,46 @@ export function nextStep(): NextStep | null {
     .sort((a, b) => (msOrder.get(a.milestone ?? '') ?? 99) - (msOrder.get(b.milestone ?? '') ?? 99))
   const w = open.find((x) => x.status === 'in_progress' || x.status === 'in_review') ?? open[0]
   return w ? { title: w.title, work_package: w.id } : null
+}
+
+// ---------------------------------------------------------------- visual servoing groups
+export const vsTaskById = new Map((progress.vs_tasks ?? []).map((t) => [t.id, t]))
+
+export function tasksOf(group: string) {
+  return (progress.vs_tasks ?? []).filter((t) => t.group === group)
+}
+
+export function groupProgress(group: string) {
+  const tasks = tasksOf(group)
+  const s = checkpointStats(tasks)
+  return { ...s, pct: s.applicable ? (100 * s.passed) / s.applicable : 0, done: tasks.filter((t) => t.status === 'done').length, total: tasks.length }
+}
+
+/** First task of the group that is not done, in schedule order. */
+export function nextTaskOf(group: string) {
+  const order = new Map((progress.vs_schedule ?? []).map((w, i) => [w.week, i]))
+  return tasksOf(group)
+    .filter((t) => !['done', 'deferred'].includes(t.status))
+    .sort((a, b) => (order.get(a.week) ?? 99) - (order.get(b.week) ?? 99))[0]
+}
+
+export function currentWeek(now = new Date()) {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return (progress.vs_schedule ?? []).find((w) => parseDate(w.start) <= d && d <= parseDate(w.end))
+}
+
+export const GROUP_SUBSYSTEMS: Record<string, string[]> = {
+  ibvs: ['ibvs'],
+  pbvs: ['pbvs', 'pose_estimation'],
+  hybrid: ['hybrid', 'visual_servoing_benchmark'],
+}
+
+export function evidenceFor(group: string) {
+  const subs = GROUP_SUBSYSTEMS[group] ?? [group]
+  const prefix = group === 'hybrid' ? 'HYB-' : `${group.toUpperCase()}-`
+  return (data.evidence ?? []).filter((e) => subs.includes(e.subsystem) || String(e.task ?? '').startsWith(prefix))
+}
+
+export function assetUrl(path: string) {
+  return `${import.meta.env.BASE_URL}repo/${path}`
 }

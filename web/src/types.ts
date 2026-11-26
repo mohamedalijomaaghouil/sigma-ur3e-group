@@ -115,6 +115,67 @@ export interface NextStep {
   detail?: string
 }
 
+export interface VsTask {
+  id: string
+  group: 'ibvs' | 'pbvs' | 'hybrid' | string
+  title: string
+  parent_wp: string | null
+  level: string
+  week: string
+  status: WpStatus
+  objective: string
+  depends_on: string[]
+  implementation: string
+  deliverables: string[]
+  acceptance: string[]
+  acceptance_preliminary: boolean
+  evidence_expected: string[]
+  validation: WorkPackage['validation']
+  evidence: Evidence[]
+}
+
+export interface VsGroup {
+  id: string
+  name: string
+  doc: string
+  work_packages: string[]
+  objective: string
+  levels: { id: string; features: string; target: string }[]
+}
+
+export interface VsWeek {
+  week: string
+  start: string
+  end: string
+  ibvs: string
+  pbvs: string
+}
+
+export interface Benchmark {
+  doc: string
+  controllers: string[]
+  stages: { id: string; name: string }[]
+  scenarios: { id: string; name: string }[]
+  metrics: string[]
+}
+
+export interface EvidenceRecord {
+  title: string
+  task: string
+  subsystem: string
+  type: 'picture' | 'screenshot' | 'video' | 'plot' | 'data' | 'document' | string
+  contributor: string
+  date: string
+  description?: string
+  validation_level?: string
+  status: 'draft' | 'approved' | string
+  git_commit?: string
+  experiment?: string
+  file?: string
+  url?: string
+  record: string
+}
+
 export interface Progress {
   schema_version: number
   updated: string
@@ -149,6 +210,10 @@ export interface Progress {
   milestones: Milestone[]
   work_packages: WorkPackage[]
   open_questions: OpenQuestion[]
+  vs_groups: VsGroup[]
+  vs_schedule: VsWeek[]
+  vs_tasks: VsTask[]
+  benchmark: Benchmark
 }
 
 export interface ExperimentMethod {
@@ -203,6 +268,7 @@ export interface ProjectData {
   progress: Progress
   experiments: Experiment[]
   experimentErrors: { folder: string; error: string }[]
+  evidence: EvidenceRecord[]
   docs: Doc[]
   git: {
     available: boolean

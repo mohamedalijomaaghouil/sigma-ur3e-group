@@ -67,7 +67,7 @@ export function Badge({ color, children, dashed }: { color: string; children: Re
 }
 
 /** Four small cells: implementation, offline, simulation, hardware. */
-export function ValidationTrack({ wp }: { wp: WorkPackage }) {
+export function ValidationTrack({ wp }: { wp: Pick<WorkPackage, 'validation'> }) {
   return (
     <span className="vtrack" aria-label="Validation levels">
       {LEVELS.map((l) => {
@@ -78,7 +78,7 @@ export function ValidationTrack({ wp }: { wp: WorkPackage }) {
   )
 }
 
-export function ValidationTrackLarge({ wp }: { wp: WorkPackage }) {
+export function ValidationTrackLarge({ wp }: { wp: Pick<WorkPackage, 'validation'> }) {
   return (
     <div className="vtrack-lg">
       {LEVELS.map((l) => {

@@ -1,10 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { data, progress } from '../data'
+import { data, progress, tasksOf } from '../data'
 import { ProgressMini } from './ProgressSummary'
 import {
   BrandMark, IconActivity, IconArch, IconBranch, IconDocs, IconMenu, IconMoon, IconOverview,
-  IconProgress, IconResults, IconRoadmap, IconSun, IconTeam,
+  IconProgress, IconResults, IconRoadmap, IconSun, IconTeam, IconTarget, IconCube, IconCompare, IconCamera,
 } from './Icons'
 
 export const NAV: { to: string; label: string; icon: ReactNode; count?: () => number | string }[] = [
@@ -13,7 +13,11 @@ export const NAV: { to: string; label: string; icon: ReactNode; count?: () => nu
   { to: '/roadmap', label: 'Roadmap', icon: <IconRoadmap />, count: () => progress.milestones.length },
   { to: '/progress', label: 'Progress', icon: <IconProgress />, count: () => progress.work_packages.length },
   { to: '/team', label: 'Team', icon: <IconTeam />, count: () => progress.team.members.length },
+  { to: '/ibvs', label: 'IBVS · Group A', icon: <IconTarget />, count: () => tasksOf('ibvs').length },
+  { to: '/pbvs', label: 'PBVS · Group B', icon: <IconCube />, count: () => tasksOf('pbvs').length },
+  { to: '/comparison', label: 'Comparison', icon: <IconCompare />, count: () => tasksOf('hybrid').length },
   { to: '/results', label: 'Results', icon: <IconResults />, count: () => data.experiments.length },
+  { to: '/evidence', label: 'Evidence', icon: <IconCamera />, count: () => (data.evidence ?? []).filter((e) => e.status === 'approved').length },
   { to: '/docs', label: 'Documentation', icon: <IconDocs />, count: () => data.docs.length },
   { to: '/activity', label: 'Activity', icon: <IconActivity />, count: () => data.git.commits.length },
 ]
@@ -57,8 +61,10 @@ export function Layout() {
           {NAV.slice(0, 2).map((n) => <NavItem key={n.to} {...n} />)}
           <div className="nav-section">Delivery</div>
           {NAV.slice(2, 5).map((n) => <NavItem key={n.to} {...n} />)}
+          <div className="nav-section">Visual servoing</div>
+          {NAV.slice(5, 8).map((n) => <NavItem key={n.to} {...n} />)}
           <div className="nav-section">Knowledge</div>
-          {NAV.slice(5).map((n) => <NavItem key={n.to} {...n} />)}
+          {NAV.slice(8).map((n) => <NavItem key={n.to} {...n} />)}
         </nav>
         <div className="sidebar-foot">
           <ProgressMini />
