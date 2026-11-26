@@ -1,6 +1,6 @@
 # RealSense parameters for RGB-only acquisition (decision D2).
 # The colour profile is NOT set here: it is a required launch argument,
-# because the camera model and its supported profiles are not confirmed yet (open question Q2).
+# because the profile for our D435 is not chosen yet (open question Q2: list them with rs-enumerate-devices -s).
 /**:
   ros__parameters:
     enable_color: true

@@ -54,8 +54,8 @@ project:
   hardware:
     - item: Universal Robots UR3e (6 DoF)
       status: confirmed
-    - item: Intel RealSense camera, RGB only for perception
-      status: model to confirm
+    - item: Intel RealSense D435, RGB only for perception
+      status: confirmed
     - item: OnRobot gripper
       status: model to confirm
     - item: UR3e built-in force/torque sensing
@@ -604,7 +604,7 @@ work_packages:
 
 open_questions:
   - {id: Q1, question: "Camera mount: eye-in-hand or eye-to-hand?", blocks: [WP6, WP10], ask: group / professors, status: open}
-  - {id: Q2, question: "Exact RealSense model and available colour profiles", blocks: [WP2, WP3], ask: lab, status: open}
+  - {id: Q2, question: "Colour profile to use on our D435 (model confirmed 26/11; list profiles with rs-enumerate-devices)", blocks: [WP2, WP3], ask: technical check, status: open}
   - {id: Q3, question: "Exact OnRobot gripper model, connection and ROS 2 Humble driver", blocks: [WP6, WP7, WP15], ask: lab / professors, status: open}
   - {id: Q4, question: "ROS 2 distribution on the lab PCs and External Control URCap on the robot", blocks: [WP4], ask: lab, status: open}
   - {id: Q5, question: "Demo date and lab access (including holidays)", blocks: [], ask: professors, status: open}

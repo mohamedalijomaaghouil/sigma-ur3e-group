@@ -4,7 +4,7 @@ Guidance for AI coding assistants working in this repository. Humans: see [READM
 
 ## Project
 
-UR3e + RGB camera (RealSense, RGB only) + OnRobot gripper, ROS 2 Humble. Assistive bottle opening: detect cap → visual servoing (IBVS, PBVS, hybrid — all mandatory) → grasp → unscrew → lift. Academic project: the team must understand and explain every method; reports are written by the team, not by AI.
+UR3e + Intel RealSense D435 (RGB only) + OnRobot gripper, ROS 2 Humble. Assistive bottle opening: detect cap → visual servoing (IBVS, PBVS, hybrid — all mandatory) → grasp → unscrew → lift. Academic project: the team must understand and explain every method; reports are written by the team, not by AI.
 
 Read before working: [docs/architecture.md](docs/architecture.md), [docs/conventions.md](docs/conventions.md), [docs/workflow.md](docs/workflow.md), [progress.yaml](progress.yaml). Visual servoing work: [docs/IBVS.md](docs/IBVS.md), [docs/PBVS.md](docs/PBVS.md), [docs/VISUAL_SERVOING_BENCHMARK.md](docs/VISUAL_SERVOING_BENCHMARK.md).
 

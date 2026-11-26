@@ -68,7 +68,7 @@ Target ROS 2 packages: `ur3e_bringup`, `ur3e_description`, `ur3e_moveit_config`,
 ## Platform
 
 Ubuntu 22.04 · ROS 2 Humble · `ur_robot_driver` · ros2_control · MoveIt 2 / MoveIt Servo · OpenCV · PyTorch · NumPy / SciPy.
-Hardware: UR3e, Intel RealSense (RGB only for perception; model to confirm), OnRobot gripper (model to confirm).
+Hardware: UR3e, Intel RealSense D435 (RGB only for perception), OnRobot gripper (model to confirm).
 
 ## Quick start
 
