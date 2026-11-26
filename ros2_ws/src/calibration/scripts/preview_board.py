@@ -3,7 +3,7 @@
 
   python3 preview_board.py          (q = quit)
 
-Green text = good start pose for handeye_auto.py: board centred, distance 30-40 cm, tilt < 10 deg.
+Green text = good start pose for handeye_auto.py: board centred, distance 26-32 cm, tilt < 10 deg.
 """
 import os
 import threading
@@ -51,11 +51,11 @@ def main():
                 uv = c.reshape(-1, 2).mean(axis=0)
                 off = np.hypot(uv[0] - w / 2, uv[1] - h / 2)
                 cv2.circle(view, (int(uv[0]), int(uv[1])), 10, (0, 0, 255), -1)
-                good = 30 <= dist <= 40 and tilt < 10 and off < 80
+                good = 26 <= dist <= 32 and tilt < 10 and off < 80
                 msg = f"distance {dist:.0f} cm   tilt {tilt:.0f} deg   off-centre {off:.0f} px"
                 cv2.putText(view, msg, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
                             (0, 255, 0) if good else (0, 165, 255), 2)
-                cv2.putText(view, "GOOD START POSE" if good else "target: 30-40 cm, tilt<10, red dot on cross",
+                cv2.putText(view, "GOOD START POSE" if good else "target: 26-32 cm, tilt<10, red dot on cross",
                             (10, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0) if good else (0, 165, 255), 2)
             else:
                 cv2.putText(view, "board not visible", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)

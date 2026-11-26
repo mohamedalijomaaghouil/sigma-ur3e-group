@@ -10,8 +10,8 @@ Before running:
   python3 handeye_auto.py --dry-run     # computes and checks the poses, robot does NOT move
   python3 handeye_auto.py               # moves (asks for ENTER first)
 
-How the poses are made: the camera "orbits" around the board centre: tilt 15-35 deg in 8 directions,
-plus rotation about the optical axis (-60..+60 deg) and a few distance changes. A rough camera
+How the poses are made: the camera "orbits" around the board centre: tilt 15-30 deg in 12 directions,
+plus rotation about the optical axis (-45..+45 deg) and a few distance changes. A rough camera
 offset X (from try 1) is enough for this; the exact X is what we compute afterwards.
 Safety: slow joint moves, every target checked with IK + controller safety limits, TCP never
 lower than --min-height above the board, return to start pose at the end.
@@ -70,14 +70,14 @@ def make_targets(T_tcp0, X, T_cb0, objp, min_height):
     dist0 = np.linalg.norm(T_c0[:3, 3] - P)
     targets = []
     rng = np.random.default_rng(0)
-    for k, az in enumerate(np.arange(0, 360, 45)):              # 8 tilt directions
-        for tilt in (20, 35):
+    for k, az in enumerate(np.arange(0, 360, 30)):              # 12 tilt directions
+        for tilt in (15, 30):
             axis = np.array([np.cos(np.radians(az)), np.sin(np.radians(az)), 0.0])
             axis = axis - n_board * (axis @ n_board)             # axis in the board plane
             axis /= np.linalg.norm(axis)
             R = Rotation.from_rotvec(np.radians(tilt) * axis).as_matrix()
             T_c = rot_about_point(P, R) @ T_c0
-            roll = np.radians(rng.uniform(-60, 60))               # turn around the optical axis
+            roll = np.radians(rng.uniform(-45, 45))               # turn around the optical axis
             T_c = T_c @ pose_to_mat([0, 0, 0, 0, 0, roll])
             dz = rng.choice([-0.05, 0.0, 0.05])                   # closer / farther
             T_c = T_c @ pose_to_mat([0, 0, -dz, 0, 0, 0])
