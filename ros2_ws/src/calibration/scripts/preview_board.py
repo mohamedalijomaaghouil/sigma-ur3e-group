@@ -72,3 +72,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    os._exit(0)  # avoid "terminate called without an active exception" from the ROS spin thread
